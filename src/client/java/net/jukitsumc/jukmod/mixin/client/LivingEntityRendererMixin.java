@@ -42,7 +42,7 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
     @Inject(method="setupRotations", at=@At("TAIL"))
     protected void setupRotations(T livingEntity, PoseStack poseStack, float f, float g, float h, CallbackInfo info) {
 
-        if (livingEntity.deathTime > 0 && livingEntity instanceof Mob) {
+        if (livingEntity.deathTime > 0) {
             float i = ((float) livingEntity.deathTime + h - 1.0F) / 20.0F * 1.6F;
             i = Mth.sqrt(i);
             if (i > 1.0F) {
