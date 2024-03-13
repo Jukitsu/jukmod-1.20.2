@@ -1,5 +1,7 @@
 package net.jukitsumc.jukmod.mixin.client;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.model.EntityModel;
@@ -14,6 +16,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.animal.Animal;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,7 +45,7 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
     @Inject(method="setupRotations", at=@At("TAIL"))
     protected void setupRotations(T livingEntity, PoseStack poseStack, float f, float g, float h, CallbackInfo info) {
 
-        if (livingEntity.deathTime > 0) {
+        if (livingEntity.deathTime > 0 && !(livingEntity instanceof Animal)) {
             float i = ((float) livingEntity.deathTime + h - 1.0F) / 20.0F * 1.6F;
             i = Mth.sqrt(i);
             if (i > 1.0F) {
@@ -52,6 +55,11 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
             poseStack.mulPose(Axis.XP.rotationDegrees(i * this.getFlipDegrees(livingEntity)));
         }
 
+    }
+
+    @ModifyExpressionValue(method="render", at=@At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;isAlive()Z"))
+    private boolean deathWalkAnimation(boolean original) {
+        return true;
     }
 /*
     @Inject(method="getRenderType", at=@At("HEAD"), cancellable = true) @Nullable
