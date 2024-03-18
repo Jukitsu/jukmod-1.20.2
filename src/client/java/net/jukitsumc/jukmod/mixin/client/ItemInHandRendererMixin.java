@@ -2,8 +2,6 @@ package net.jukitsumc.jukmod.mixin.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
@@ -12,7 +10,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import javax.security.auth.callback.Callback;
 
 @Mixin(ItemInHandRenderer.class)
 public class ItemInHandRendererMixin {
@@ -34,10 +35,11 @@ public class ItemInHandRendererMixin {
         poseStack.mulPose(Axis.YP.rotationDegrees((float)i * -45.0F));
     }
 
-    @Overwrite
-    private void applyItemArmTransform(PoseStack poseStack, HumanoidArm humanoidArm, float f) {
+    @Inject(method="applyItemArmTransform", at=@At(value="TAIL"))
+    private void applyItemArmTransform(PoseStack poseStack, HumanoidArm humanoidArm, float f, CallbackInfo info) {
         int i = humanoidArm == HumanoidArm.RIGHT ? 1 : -1;
-        poseStack.translate((float)i * 0.50F, -0.52F + f * -0.6F, -0.75F);
+        poseStack.translate((float)-i * 0.02F, 0.0F, 0.0F);
     }
+
 
 }
