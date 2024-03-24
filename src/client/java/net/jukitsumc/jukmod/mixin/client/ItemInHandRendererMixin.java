@@ -18,7 +18,7 @@ import javax.security.auth.callback.Callback;
 @Mixin(ItemInHandRenderer.class)
 public class ItemInHandRendererMixin {
     @Shadow @Final public static final float ITEM_SWING_X_ROT_AMOUNT = -75.0F;
-    @Shadow @Final public static final float ITEM_SWING_Y_ROT_AMOUNT = -25.0F;
+    @Shadow @Final public static final float ITEM_SWING_Y_ROT_AMOUNT = -20.0F;
     @Shadow @Final public static final float ITEM_SWING_Z_ROT_AMOUNT = -25.0F;
 
     // private final Minecraft mc = Minecraft.getInstance();

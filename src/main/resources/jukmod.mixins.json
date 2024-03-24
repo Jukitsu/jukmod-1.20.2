@@ -3,7 +3,8 @@
 	"package": "net.jukitsumc.jukmod.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
-
+		"LivingEntityMixin",
+		"MoveControlMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

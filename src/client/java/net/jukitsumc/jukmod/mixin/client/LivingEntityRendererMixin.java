@@ -17,6 +17,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -45,7 +46,7 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
     @Inject(method="setupRotations", at=@At("TAIL"))
     protected void setupRotations(T livingEntity, PoseStack poseStack, float f, float g, float h, CallbackInfo info) {
 
-        if (livingEntity.deathTime > 0 && !(livingEntity instanceof Animal)) {
+        if (livingEntity.deathTime > 0 && !(livingEntity instanceof Animal || livingEntity instanceof Player)) {
             float i = ((float) livingEntity.deathTime + h - 1.0F) / 20.0F * 1.6F;
             i = Mth.sqrt(i);
             if (i > 1.0F) {
