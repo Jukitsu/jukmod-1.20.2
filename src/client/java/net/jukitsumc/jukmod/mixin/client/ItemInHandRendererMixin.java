@@ -13,32 +13,34 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.security.auth.callback.Callback;
-
 @Mixin(ItemInHandRenderer.class)
 public class ItemInHandRendererMixin {
-    @Shadow @Final public static final float ITEM_SWING_X_ROT_AMOUNT = -75.0F;
-    @Shadow @Final public static final float ITEM_SWING_Y_ROT_AMOUNT = -20.0F;
-    @Shadow @Final public static final float ITEM_SWING_Z_ROT_AMOUNT = -25.0F;
-
-    // private final Minecraft mc = Minecraft.getInstance();
+    @Shadow
+    @Final
+    public static final float ITEM_SWING_X_ROT_AMOUNT = -75.0F;
+    @Shadow
+    @Final
+    public static final float ITEM_SWING_Y_ROT_AMOUNT = -20.0F;
+    @Shadow
+    @Final
+    public static final float ITEM_SWING_Z_ROT_AMOUNT = -25.0F;
 
 
     @Overwrite
     private void applyItemArmAttackTransform(PoseStack poseStack, HumanoidArm humanoidArm, float f) {
         int i = humanoidArm == HumanoidArm.RIGHT ? 1 : -1;
         float g = Mth.sin(f * f * 3.1415927F);
-        poseStack.mulPose(Axis.YP.rotationDegrees((float)i * (45.0F + g * ITEM_SWING_Y_ROT_AMOUNT)));
+        poseStack.mulPose(Axis.YP.rotationDegrees((float) i * (45.0F + g * ITEM_SWING_Y_ROT_AMOUNT)));
         float h = Mth.sin(Mth.sqrt(f) * 3.1415927F);
-        poseStack.mulPose(Axis.ZP.rotationDegrees((float)i * h * ITEM_SWING_Z_ROT_AMOUNT));
+        poseStack.mulPose(Axis.ZP.rotationDegrees((float) i * h * ITEM_SWING_Z_ROT_AMOUNT));
         poseStack.mulPose(Axis.XP.rotationDegrees(h * ITEM_SWING_X_ROT_AMOUNT));
-        poseStack.mulPose(Axis.YP.rotationDegrees((float)i * -45.0F));
+        poseStack.mulPose(Axis.YP.rotationDegrees((float) i * -45.0F));
     }
 
-    @Inject(method="applyItemArmTransform", at=@At(value="TAIL"))
+    @Inject(method = "applyItemArmTransform", at = @At(value = "TAIL"))
     private void applyItemArmTransform(PoseStack poseStack, HumanoidArm humanoidArm, float f, CallbackInfo info) {
         int i = humanoidArm == HumanoidArm.RIGHT ? 1 : -1;
-        poseStack.translate((float)-i * 0.02F, 0.0F, 0.0F);
+        poseStack.translate((float) -i * 0.02F, 0.0F, 0.0F);
     }
 
 

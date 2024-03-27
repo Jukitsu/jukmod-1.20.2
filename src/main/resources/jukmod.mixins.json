@@ -4,7 +4,10 @@
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
 		"LivingEntityMixin",
-		"MoveControlMixin"
+		"BodyRotationControlMixin",
+		"MobMixin",
+		"RangedBowAttackGoalMixin",
+		"MeleeAttackGoalMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
