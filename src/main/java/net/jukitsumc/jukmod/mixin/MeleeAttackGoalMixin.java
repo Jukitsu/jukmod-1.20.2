@@ -26,7 +26,7 @@ public class MeleeAttackGoalMixin {
         long l = this.mob.level().getGameTime();
         this.lastCanUseCheck = l - 22L;
     }
-
+/*
     @Overwrite
     public boolean canContinueToUse() {
         LivingEntity livingEntity = this.mob.getTarget();
@@ -37,7 +37,9 @@ public class MeleeAttackGoalMixin {
         } else if (!this.mob.isWithinRestriction(livingEntity.blockPosition())) {
             return false;
         } else {
-            return !(livingEntity instanceof Player) || !livingEntity.isSpectator() && !((Player) livingEntity).isCreative();
+            return !(livingEntity instanceof Player) || !livingEntity.isSpectator() && !((Player)livingEntity).isCreative();
         }
     }
+
+*/
 }

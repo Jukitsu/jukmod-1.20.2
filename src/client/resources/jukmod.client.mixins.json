@@ -5,7 +5,8 @@
 	"client": [
 		"MultiPlayerGameModeMixin",
 		"LivingEntityRendererMixin",
-		"ItemInHandRendererMixin"
+		"ItemInHandRendererMixin",
+		"IllagerModelMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
