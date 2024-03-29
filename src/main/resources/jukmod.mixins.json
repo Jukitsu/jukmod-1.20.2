@@ -7,7 +7,6 @@
 		"BodyRotationControlMixin",
 		"MobMixin",
 		"RangedBowAttackGoalMixin",
-		"MeleeAttackGoalMixin",
 		"SwellGoalMixin"
 	],
 	"injectors": {
