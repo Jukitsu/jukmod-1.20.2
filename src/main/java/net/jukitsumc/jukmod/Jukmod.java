@@ -23,6 +23,7 @@ import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.biome.BiomeSources;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.structure.Structure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.FabricUtil;
@@ -34,10 +35,14 @@ public class Jukmod implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("jukmod");
     public static final String MOD_ID = "jukmod";
 
+
+
 	public static final EntityType<Human> HUMAN = Registry.register(BuiltInRegistries.ENTITY_TYPE,
 			new ResourceLocation(Jukmod.MOD_ID, "human"),
 			FabricEntityTypeBuilder.create(MobCategory.AMBIENT, Human::new).dimensions(EntityDimensions.fixed(0.6f, 1.8f)).build()
 	);
+
+	public static final Item HUMAN_SPAWN_EGG = new SpawnEggItem(HUMAN, 0xc4c4c4, 0xadadad, new FabricItemSettings());
 
 	@Override
 	public void onInitialize() {
@@ -47,8 +52,9 @@ public class Jukmod implements ModInitializer {
 
 		LOGGER.info("1.8 Miss Penalty Removed ! :D");
 		FabricDefaultAttributeRegistry.register(HUMAN, Human.createHumanAttributes());
-		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(Biomes.PLAINS, Biomes.BEACH, Biomes.FOREST, Biomes.DESERT, Biomes.SAVANNA, Biomes.WINDSWEPT_HILLS, Biomes.SNOWY_PLAINS), MobCategory.CREATURE, HUMAN, 10, 1, 12);
+		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(Biomes.PLAINS, Biomes.BEACH, Biomes.FOREST, Biomes.DESERT, Biomes.SAVANNA, Biomes.WINDSWEPT_HILLS, Biomes.SNOWY_PLAINS), MobCategory.CREATURE, HUMAN, 36, 2, 12);
 		SpawnPlacements.register(HUMAN, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Human::checkHumanSpawnRules);
+		Registry.register(BuiltInRegistries.ITEM, new ResourceLocation("jukmod", "human_spawn_egg"), HUMAN_SPAWN_EGG);
 
 	}
 }
