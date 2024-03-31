@@ -2,16 +2,23 @@ package net.jukitsumc.jukmod;
 
 import net.fabricmc.api.ModInitializer;
 
+import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
+import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
+import net.fabricmc.fabric.impl.biome.modification.BiomeModificationImpl;
 import net.jukitsumc.jukmod.entity.Human;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.data.worldgen.BiomeDefaultFeatures;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EntityDimensions;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.level.biome.BiomeManager;
+import net.minecraft.world.level.biome.BiomeSources;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.levelgen.Heightmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +31,7 @@ public class Jukmod implements ModInitializer {
 
 	public static final EntityType<Human> HUMAN = Registry.register(BuiltInRegistries.ENTITY_TYPE,
 			new ResourceLocation(Jukmod.MOD_ID, "human"),
-			FabricEntityTypeBuilder.create(MobCategory.CREATURE, Human::new).dimensions(EntityDimensions.fixed(0.6f, 1.8f)).build()
+			FabricEntityTypeBuilder.create(MobCategory.AMBIENT, Human::new).dimensions(EntityDimensions.fixed(0.6f, 1.8f)).build()
 	);
 
 
@@ -37,5 +44,8 @@ public class Jukmod implements ModInitializer {
 
 		LOGGER.info("1.8 Miss Penalty Removed ! :D");
 		FabricDefaultAttributeRegistry.register(HUMAN, Human.createHumanAttributes());
+		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(Biomes.PLAINS, Biomes.BEACH, Biomes.FOREST, Biomes.DESERT, Biomes.SAVANNA, Biomes.WINDSWEPT_HILLS, Biomes.SNOWY_PLAINS), MobCategory.CREATURE, HUMAN, 10, 1, 12);
+		SpawnPlacements.register(HUMAN, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Human::checkHumanSpawnRules);
+
 	}
 }
