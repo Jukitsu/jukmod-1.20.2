@@ -12,6 +12,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.util.VisibleForDebug;
 import net.minecraft.util.valueproviders.UniformInt;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
@@ -36,10 +37,12 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.EnumSet;
 import java.util.UUID;
 
 
@@ -64,7 +67,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.0D, false));
+        this.goalSelector.addGoal(1, new HumanMeleeAttackGoal(this, 1.0D, false));
         this.goalSelector.addGoal(2, new WaterAvoidingRandomStrollGoal(this, 1.0D));
         this.goalSelector.addGoal(3, new LookAtPlayerGoal(this, Player.class, 6.0F));
         this.goalSelector.addGoal(4, new RandomLookAroundGoal(this));
@@ -75,7 +78,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     }
 
     public static AttributeSupplier.Builder createHumanAttributes() {
-        return PathfinderMob.createMobAttributes().add(Attributes.MAX_HEALTH, 20).add(Attributes.MOVEMENT_SPEED, 0.3D).add(Attributes.ATTACK_DAMAGE, 2.0D).add(Attributes.FOLLOW_RANGE, 128);
+        return PathfinderMob.createMobAttributes().add(Attributes.MAX_HEALTH, 20).add(Attributes.MOVEMENT_SPEED, 0.3D).add(Attributes.ATTACK_DAMAGE, 2.0D).add(Attributes.ATTACK_KNOCKBACK, 0.0D).add(Attributes.FOLLOW_RANGE, 128);
     }
 
     protected ItemStack addToInventory(ItemStack itemStack) {
@@ -292,6 +295,138 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
 
         }
     }
+
+    public class HumanMeleeAttackGoal extends Goal {
+        protected final PathfinderMob mob;
+        private final double speedModifier;
+        private final boolean followingTargetEvenIfNotSeen;
+        private Path path;
+        private double pathedTargetX;
+        private double pathedTargetY;
+        private double pathedTargetZ;
+        private int ticksUntilNextPathRecalculation;
+        private int ticksUntilNextAttack;
+        private final int attackInterval = 20;
+        private long lastCanUseCheck;
+        private static final long COOLDOWN_BETWEEN_CAN_USE_CHECKS = 20L;
+
+        public HumanMeleeAttackGoal(PathfinderMob pathfinderMob, double d, boolean bl) {
+            this.mob = pathfinderMob;
+            this.speedModifier = d;
+            this.followingTargetEvenIfNotSeen = bl;
+            this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
+        }
+
+        public boolean canUse() {
+            LivingEntity livingEntity = this.mob.getTarget();
+            if (livingEntity == null) {
+                return false;
+            } else if (!livingEntity.isAlive()) {
+                return false;
+            } else {
+                this.path = this.mob.getNavigation().createPath(livingEntity, 0);
+                if (this.path != null) {
+                    return true;
+                } else {
+                    return this.getAttackReachSqr(livingEntity) >= this.mob.distanceToSqr(livingEntity.getX(), livingEntity.getY(), livingEntity.getZ());
+                }
+            }
+        }
+
+        public boolean canContinueToUse() {
+            LivingEntity livingEntity = this.mob.getTarget();
+            if (livingEntity == null) {
+                return false;
+            } else if (!livingEntity.isAlive()) {
+                return false;
+            } else if (!this.mob.isWithinRestriction(livingEntity.blockPosition())) {
+                return false;
+            } else {
+                return !(livingEntity instanceof Player) || !livingEntity.isSpectator() && !((Player)livingEntity).isCreative();
+            }
+        }
+
+        public void start() {
+            this.mob.getNavigation().moveTo(this.path, this.speedModifier);
+            this.mob.setAggressive(true);
+            this.ticksUntilNextPathRecalculation = 0;
+            this.ticksUntilNextAttack = 0;
+        }
+
+        public void stop() {
+            LivingEntity livingEntity = this.mob.getTarget();
+            if (!EntitySelector.NO_CREATIVE_OR_SPECTATOR.test(livingEntity)) {
+                this.mob.setTarget((LivingEntity)null);
+            }
+
+            this.mob.setAggressive(false);
+            this.mob.getNavigation().stop();
+        }
+
+        public boolean requiresUpdateEveryTick() {
+            return true;
+        }
+
+        public void tick() {
+            LivingEntity livingEntity = this.mob.getTarget();
+            if (livingEntity != null) {
+                this.mob.getLookControl().setLookAt(livingEntity, 30.0F, 30.0F);
+                double d = this.mob.getPerceivedTargetDistanceSquareForMeleeAttack(livingEntity);
+                this.ticksUntilNextPathRecalculation = Math.max(this.ticksUntilNextPathRecalculation - 1, 0);
+                if ((this.followingTargetEvenIfNotSeen || this.mob.getSensing().hasLineOfSight(livingEntity)) && this.ticksUntilNextPathRecalculation <= 0 && (this.pathedTargetX == 0.0D && this.pathedTargetY == 0.0D && this.pathedTargetZ == 0.0D || livingEntity.distanceToSqr(this.pathedTargetX, this.pathedTargetY, this.pathedTargetZ) >= 1.0D || this.mob.getRandom().nextFloat() < 0.05F)) {
+                    this.pathedTargetX = livingEntity.getX();
+                    this.pathedTargetY = livingEntity.getY();
+                    this.pathedTargetZ = livingEntity.getZ();
+                    this.ticksUntilNextPathRecalculation = 4 + this.mob.getRandom().nextInt(7);
+                    if (d > 1024.0D) {
+                        this.ticksUntilNextPathRecalculation += 10;
+                    } else if (d > 256.0D) {
+                        this.ticksUntilNextPathRecalculation += 5;
+                    }
+
+                    if (!this.mob.getNavigation().moveTo(livingEntity, this.speedModifier)) {
+                        this.ticksUntilNextPathRecalculation += 15;
+                    }
+
+                    this.ticksUntilNextPathRecalculation = this.adjustedTickDelay(this.ticksUntilNextPathRecalculation);
+                }
+
+                this.ticksUntilNextAttack = Math.max(this.ticksUntilNextAttack - 1, 0);
+                this.checkAndPerformAttack(livingEntity, d);
+            }
+        }
+
+        protected void checkAndPerformAttack(LivingEntity livingEntity, double d) {
+            double e = this.getAttackReachSqr(livingEntity);
+            if (d <= e && this.ticksUntilNextAttack <= 0) {
+                this.resetAttackCooldown();
+                this.mob.swing(InteractionHand.MAIN_HAND);
+                this.mob.doHurtTarget(livingEntity);
+            }
+
+        }
+
+        protected void resetAttackCooldown() {
+            this.ticksUntilNextAttack = this.adjustedTickDelay(10);
+        }
+
+        protected boolean isTimeToAttack() {
+            return this.ticksUntilNextAttack <= 0;
+        }
+
+        protected int getTicksUntilNextAttack() {
+            return this.ticksUntilNextAttack;
+        }
+
+        protected int getAttackInterval() {
+            return this.adjustedTickDelay(10);
+        }
+
+        protected double getAttackReachSqr(LivingEntity livingEntity) {
+            return 9.0D;
+        }
+    }
+
 
     static {
         PERSISTENT_ANGER_TIME = TimeUtil.rangeOfSeconds(20, 39);
