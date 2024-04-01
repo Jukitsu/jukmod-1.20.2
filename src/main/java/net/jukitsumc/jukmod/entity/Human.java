@@ -38,8 +38,11 @@ import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.npc.InventoryCarrier;
 import net.minecraft.world.entity.npc.Npc;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.entity.raid.Raider;
 import net.minecraft.world.item.AxeItem;
+import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -56,7 +59,7 @@ import java.util.EnumSet;
 import java.util.UUID;
 
 
-public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCarrier {
+public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCarrier, RangedAttackMob {
     private static final int ALERT_RANGE_Y = 64;
     private static final UniformInt ALERT_INTERVAL;
     private int ticksUntilNextAlert;
@@ -68,19 +71,44 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     private int lastTimeSinceJumped = 0;
     private boolean canFightCreepers = false;
     private int timesBeforeNextHeal = 0;
+    private boolean hasRangedWeapon = false;
 
     public Human(EntityType<Human> entityType, Level level) {
         super(entityType, level);
         this.setCanPickUpLoot(true);
         this.setPathfindingMalus(BlockPathTypes.DANGER_FIRE, 16.0F);
         this.setPathfindingMalus(BlockPathTypes.DAMAGE_FIRE, -1.0F);
+
+        if ((double)this.random.nextFloat() > 0.75D) {
+            this.canFightCreepers = true;
+            if ((double)this.random.nextFloat() > 0.5D) {
+                this.hasRangedWeapon = true;
+                this.canFightCreepers = true;
+            }
+        }
+
+        if (!hasRangedWeapon) {
+            this.goalSelector.addGoal(2, new HumanMeleeAttackGoal(this, 1.0D, false));
+            this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, EnderMan.class, true, false));
+        }
+        else {
+            this.goalSelector.addGoal(2, new RangedHumanBowAttackGoal(this, 1.0D, 20, 15.0F));
+            this.goalSelector.addGoal(3, new AvoidEntityGoal(this, EnderMan.class, 6.0F, 1.0D, 1.0D));
+        }
+
+        if (!canFightCreepers) {
+            this.goalSelector.addGoal(3, new AvoidEntityGoal(this, Creeper.class, 6.0F, 1.0D, 1.0D));
+        }
+        else {
+            this.targetSelector.addGoal(10, new NearestAttackableTargetGoal(this, Creeper.class, true, true));
+        }
+
     }
 
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new OpenDoorGoal(this, true));
-        this.goalSelector.addGoal(2, new HumanMeleeAttackGoal(this, 1.0D, false));
         this.goalSelector.addGoal(3, new AvoidEntityGoal(this, WitherBoss.class, 6.0F, 1.0D, 1.0D));
         this.goalSelector.addGoal(3, new AvoidEntityGoal(this, Warden.class, 6.0F, 1.0D, 1.0D));
         this.goalSelector.addGoal(3, new AvoidEntityGoal(this, Vex.class, 6.0F, 1.0D, 1.0D));
@@ -89,37 +117,51 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         this.goalSelector.addGoal(4, new WaterAvoidingRandomStrollGoal(this, 1.0D));
         this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, 6.0F));
         this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
-        this.targetSelector.addGoal(7, new HurtByTargetGoal(this).setAlertOthers(new Class[0]));
-        this.targetSelector.addGoal(8, new NearestAttackableTargetGoal(this, EnderDragon.class, true, false));
-        this.targetSelector.addGoal(9, new NearestAttackableTargetGoal(this, EnderMan.class, true, false));
-        this.targetSelector.addGoal(9, new NearestAttackableTargetGoal(this, Blaze.class, true, false));
-        this.targetSelector.addGoal(9, new NearestAttackableTargetGoal(this, Raider.class, true, false));
-        this.targetSelector.addGoal(9, new NearestAttackableTargetGoal(this, ElderGuardian.class, true, false));
-        this.targetSelector.addGoal(9, new NearestAttackableTargetGoal(this, Silverfish.class, true, false));
-        this.targetSelector.addGoal(9, new NearestAttackableTargetGoal(this, Endermite.class, true, false));
-        this.targetSelector.addGoal(11, new ResetUniversalAngerTargetGoal(this, false));
+        this.targetSelector.addGoal(1, new HurtByTargetGoal(this).setAlertOthers(Human.class));
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal(this, EnderDragon.class, true, false));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, Blaze.class, true, false));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, Raider.class, true, false));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, ElderGuardian.class, true, false));
+        this.targetSelector.addGoal(4, new NearestAttackableTargetGoal(this, Silverfish.class, true, false));
+        this.targetSelector.addGoal(4, new NearestAttackableTargetGoal(this, Endermite.class, true, false));
+        this.targetSelector.addGoal(5, new ResetUniversalAngerTargetGoal(this, false));
 
-        if (!canFightCreepers)
-            this.goalSelector.addGoal(3, new AvoidEntityGoal(this, Creeper.class, 6.0F, 1.0D, 1.0D));
-        else
-            this.targetSelector.addGoal(9, new NearestAttackableTargetGoal(this, Creeper.class, true, true));
+
     }
 
     @Nullable
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor serverLevelAccessor, DifficultyInstance difficultyInstance, MobSpawnType mobSpawnType, @Nullable SpawnGroupData spawnGroupData, @Nullable CompoundTag compoundTag) {
         RandomSource randomSource = serverLevelAccessor.getRandom();
 
-        if ((double)this.random.nextFloat() > 0.75D) {
-            this.canFightCreepers = true;
-            this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.STONE_SWORD));
+        if (this.canFightCreepers) {
+            if (this.hasRangedWeapon) {
+                this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.BOW));
+            } else {
+                this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.STONE_SWORD));
+            }
+
         }
         this.populateDefaultEquipmentSlots(randomSource, difficultyInstance);
         this.populateDefaultEquipmentEnchantments(randomSource, difficultyInstance);
         return super.finalizeSpawn(serverLevelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
     }
 
+
+
+    public void performRangedAttack(LivingEntity livingEntity, float f) {
+        ItemStack itemStack = this.getProjectile(this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, Items.BOW)));
+        AbstractArrow abstractArrow = ProjectileUtil.getMobArrow(this, itemStack, f);
+        double d = livingEntity.getX() - this.getX();
+        double e = livingEntity.getY(0.33333333333333333D) - abstractArrow.getY();
+        double g = livingEntity.getZ() - this.getZ();
+        double h = Math.sqrt(d * d + g * g);
+        abstractArrow.shoot(d, e + h * 0.1D, g, 3.0F, (float)(12 - this.level().getDifficulty().getId() * 4));
+        this.playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
+        this.level().addFreshEntity(abstractArrow);
+    }
+
     public static AttributeSupplier.Builder createHumanAttributes() {
-        return PathfinderMob.createMobAttributes().add(Attributes.MAX_HEALTH, 20).add(Attributes.MOVEMENT_SPEED, 0.3D).add(Attributes.ATTACK_DAMAGE, 2.0D).add(Attributes.ATTACK_KNOCKBACK, 0.0D).add(Attributes.FOLLOW_RANGE, 128);
+        return PathfinderMob.createMobAttributes().add(Attributes.MAX_HEALTH, 20).add(Attributes.MOVEMENT_SPEED, 0.3D).add(Attributes.ATTACK_DAMAGE, 1.0D).add(Attributes.ATTACK_KNOCKBACK, 0.0D).add(Attributes.FOLLOW_RANGE, 128);
     }
 
     protected ItemStack addToInventory(ItemStack itemStack) {
@@ -159,6 +201,63 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     public void setPersistentAngerTarget(@Nullable UUID uUID) {
         this.persistentAngerTarget = uUID;
     }
+
+    protected void customServerAiStep() {
+        this.updatePersistentAnger((ServerLevel)this.level(), true);
+        if (this.getTarget() != null) {
+            this.maybeAlertOthers();
+        }
+
+        if (this.isAngry()) {
+            this.lastHurtByPlayerTime = this.tickCount;
+        }
+
+        super.customServerAiStep();
+    }
+
+
+    private void maybeAlertOthers() {
+        if (this.ticksUntilNextAlert > 0) {
+            --this.ticksUntilNextAlert;
+        } else {
+            if (this.getSensing().hasLineOfSight(this.getTarget())) {
+                this.alertOthers();
+            }
+
+            this.ticksUntilNextAlert = ALERT_INTERVAL.sample(this.random);
+        }
+    }
+
+    private void alertOthers() {
+        double d = this.getAttributeValue(Attributes.FOLLOW_RANGE);
+        AABB aABB = AABB.unitCubeFromLowerCorner(this.position()).inflate(d, 10.0D, d);
+        this.level().getEntitiesOfClass(Human.class, aABB, EntitySelector.NO_SPECTATORS).stream().filter((human) -> {
+            return human != this;
+        }).filter((human) -> {
+            return human.getTarget() == null;
+        }).filter((human) -> {
+            return !human.isAlliedTo(this.getTarget());
+        }).forEach((human) -> {
+            human.setTarget(this.getTarget());
+        });
+    }
+
+
+    public void setTarget(@Nullable LivingEntity livingEntity) {
+        if (livingEntity instanceof Human) {
+            livingEntity = null;
+        }
+        if (this.getTarget() == null && livingEntity != null) {
+            this.ticksUntilNextAlert = ALERT_INTERVAL.sample(this.random);
+        }
+
+        if (livingEntity instanceof Player) {
+            this.setLastHurtByPlayer((Player)livingEntity);
+        }
+
+        super.setTarget(livingEntity);
+    }
+
 
     public void crit(Entity entity) {
 
@@ -206,11 +305,14 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
             this.magicCrit(entity);
         }
 
+        Vec3 currentDeltaMovement = entity.getDeltaMovement();
+
         boolean bl = entity.hurt(this.damageSources().mobAttack(this), damage);
         if (bl) {
 
 
             if (knockback > 0.0F && entity instanceof LivingEntity) {
+                entity.setDeltaMovement(currentDeltaMovement);
                 ((LivingEntity)entity).knockback((double)(knockback * 0.5F), (double)Mth.sin(this.getYRot() * 0.017453292F), (double)(-Mth.cos(this.getYRot() * 0.017453292F)));
                 this.setDeltaMovement(this.getDeltaMovement().multiply(0.6D, 1.0D, 0.6D));
                 this.setSprinting(false);
@@ -250,60 +352,6 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
 
 
 
-    protected void customServerAiStep() {
-        this.updatePersistentAnger((ServerLevel)this.level(), true);
-        if (this.getTarget() != null) {
-            this.maybeAlertOthers();
-        }
-
-        if (this.isAngry()) {
-            this.lastHurtByPlayerTime = this.tickCount;
-        }
-
-        super.customServerAiStep();
-    }
-
-
-    private void maybeAlertOthers() {
-        if (this.ticksUntilNextAlert > 0) {
-            --this.ticksUntilNextAlert;
-        } else {
-            if (this.getSensing().hasLineOfSight(this.getTarget())) {
-                this.alertOthers();
-            }
-
-            this.ticksUntilNextAlert = ALERT_INTERVAL.sample(this.random);
-        }
-    }
-
-    private void alertOthers() {
-        double d = this.getAttributeValue(Attributes.FOLLOW_RANGE);
-        AABB aABB = AABB.unitCubeFromLowerCorner(this.position()).inflate(d, 10.0D, d);
-        this.level().getEntitiesOfClass(Human.class, aABB, EntitySelector.NO_SPECTATORS).stream().filter((human) -> {
-            return human != this;
-        }).filter((human) -> {
-            return human.getTarget() == null;
-        }).filter((human) -> {
-            return !human.isAlliedTo(this.getTarget());
-        }).forEach((human) -> {
-            human.setTarget(this.getTarget());
-        });
-    }
-
-
-    public void setTarget(@Nullable LivingEntity livingEntity) {
-        if (this.getTarget() == null && livingEntity != null) {
-            this.ticksUntilNextAlert = ALERT_INTERVAL.sample(this.random);
-        }
-
-        if (livingEntity instanceof Player) {
-            this.setLastHurtByPlayer((Player)livingEntity);
-        }
-
-        super.setTarget(livingEntity);
-    }
-
-
     @Override
     public void aiStep() {
         this.updateSwingTime();
@@ -337,7 +385,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
 
 
         if (isMoving && this.onGround() && this.lastTimeSinceJumped > 16) {
-            if ((isAggressive() && this.getTarget() != null && distanceToSqr(this.getTarget()) > 144.0F)
+            if ((isAggressive() && !this.hasRangedWeapon && this.getTarget() != null && distanceToSqr(this.getTarget()) > 144.0F)
                     || (!isAggressive() && (double)this.random.nextFloat() < 0.125D)) {
                 this.jumpControl.jump();
                 if (this.isSprinting()) {
@@ -481,10 +529,137 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         }
     }
 
+    public class RangedHumanBowAttackGoal<T extends Human> extends Goal {
+        private final T mob;
+        private final double speedModifier;
+        private int attackIntervalMin;
+        private final float attackRadiusSqr;
+        private int attackTime = -1;
+        private int seeTime;
+        private boolean strafingClockwise;
+        private boolean strafingBackwards;
+        private int strafingTime = -1;
+
+        public RangedHumanBowAttackGoal(T monster, double d, int i, float f) {
+            this.mob = monster;
+            this.speedModifier = d;
+            this.attackIntervalMin = i;
+            this.attackRadiusSqr = f * f;
+            this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
+        }
+
+        public void setMinAttackInterval(int i) {
+            this.attackIntervalMin = i;
+        }
+
+        public boolean canUse() {
+            return this.mob.getTarget() == null ? false : this.isHoldingBow();
+        }
+
+        protected boolean isHoldingBow() {
+            return this.mob.isHolding(Items.BOW);
+        }
+
+        public boolean canContinueToUse() {
+            return (this.canUse() || !this.mob.getNavigation().isDone()) && this.isHoldingBow();
+        }
+
+        public void start() {
+            super.start();
+            this.mob.setAggressive(true);
+        }
+
+        public void stop() {
+            super.stop();
+            this.mob.setAggressive(false);
+            this.seeTime = 0;
+            this.attackTime = -1;
+            this.mob.stopUsingItem();
+        }
+
+        public boolean requiresUpdateEveryTick() {
+            return true;
+        }
+
+        public void tick() {
+            LivingEntity livingEntity = this.mob.getTarget();
+            if (livingEntity != null) {
+                double d = this.mob.distanceToSqr(livingEntity.getX(), livingEntity.getY(), livingEntity.getZ());
+                boolean bl = this.mob.getSensing().hasLineOfSight(livingEntity);
+                boolean bl2 = this.seeTime > 0;
+                if (bl != bl2) {
+                    this.seeTime = 0;
+                }
+
+                if (bl) {
+                    ++this.seeTime;
+                } else {
+                    --this.seeTime;
+                }
+
+                if (!(d > (double)this.attackRadiusSqr) && this.seeTime >= 20) {
+                    this.mob.getNavigation().stop();
+                    ++this.strafingTime;
+                } else {
+                    this.mob.getNavigation().moveTo(livingEntity, this.speedModifier);
+                    this.strafingTime = -1;
+                }
+
+                if (this.strafingTime >= 20) {
+                    if ((double)this.mob.getRandom().nextFloat() < 0.3D) {
+                        this.strafingClockwise = !this.strafingClockwise;
+                    }
+
+                    if ((double)this.mob.getRandom().nextFloat() < 0.3D) {
+                        this.strafingBackwards = !this.strafingBackwards;
+                    }
+
+                    this.strafingTime = 0;
+                }
+
+                if (this.strafingTime > -1) {
+                    if (d > (double)(this.attackRadiusSqr * 0.75F)) {
+                        this.strafingBackwards = false;
+                    } else if (d < (double)(this.attackRadiusSqr * 0.25F)) {
+                        this.strafingBackwards = true;
+                    }
+
+                    this.mob.getMoveControl().strafe(this.strafingBackwards ? -0.5F : 0.5F, this.strafingClockwise ? 0.5F : -0.5F);
+                    Entity var7 = this.mob.getControlledVehicle();
+                    if (var7 instanceof Mob) {
+                        Mob mob = (Mob)var7;
+                        mob.lookAt(livingEntity, 30.0F, 30.0F);
+                    }
+
+                    this.mob.lookAt(livingEntity, 30.0F, 30.0F);
+
+                }
+
+                this.mob.getLookControl().setLookAt(livingEntity, 30.0F, 30.0F);
+
+                if (this.mob.isUsingItem()) {
+                    if (!bl && this.seeTime < -60) {
+                        this.mob.stopUsingItem();
+                    } else if (bl) {
+                        int i = this.mob.getTicksUsingItem();
+                        if (i >= 20) {
+                            this.mob.stopUsingItem();
+                            ((RangedAttackMob)this.mob).performRangedAttack(livingEntity, BowItem.getPowerForTime(i));
+                            this.attackTime = this.attackIntervalMin;
+                        }
+                    }
+                } else if (--this.attackTime <= 0 && this.seeTime >= -60) {
+                    this.mob.startUsingItem(ProjectileUtil.getWeaponHoldingHand(this.mob, Items.BOW));
+                }
+
+            }
+        }
+    }
+
 
     static {
         PERSISTENT_ANGER_TIME = TimeUtil.rangeOfSeconds(20, 39);
-        ALERT_INTERVAL = TimeUtil.rangeOfSeconds(4, 6);
+        ALERT_INTERVAL = TimeUtil.rangeOfSeconds(1, 8);
     }
 
 }
