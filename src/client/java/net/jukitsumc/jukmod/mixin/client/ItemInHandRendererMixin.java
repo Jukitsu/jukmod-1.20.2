@@ -20,7 +20,7 @@ public class ItemInHandRendererMixin {
     public static final float ITEM_SWING_X_ROT_AMOUNT = -75.0F;
     @Shadow
     @Final
-    public static final float ITEM_SWING_Y_ROT_AMOUNT = -20.0F;
+    public static final float ITEM_SWING_Y_ROT_AMOUNT = -25.0F;
     @Shadow
     @Final
     public static final float ITEM_SWING_Z_ROT_AMOUNT = -25.0F;
