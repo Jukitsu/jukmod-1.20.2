@@ -8,11 +8,13 @@ import net.minecraft.server.gui.MinecraftServerGui;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.util.VisibleForDebug;
 import net.minecraft.util.valueproviders.UniformInt;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
@@ -72,6 +74,15 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     private boolean canFightCreepers = false;
     private int timesBeforeNextHeal = 0;
     private boolean hasRangedWeapon = false;
+    private static final double arrowVelocity = 3.0D;
+
+    private final Goal meleeGoal = new HumanMeleeAttackGoal(this, 1.0D, false);
+    private final Goal aggroEndermanGoal = new NearestAttackableTargetGoal(this, EnderMan.class, true, false);
+    private final Goal fleeCreeperGoal = new AvoidEntityGoal(this, Creeper.class, 6.0F, 1.0D, 1.0D);
+    private final Goal aggroCreeperGoal = new NearestAttackableTargetGoal(this, Creeper.class, true, true);
+    private final Goal bowGoal = new RangedHumanBowAttackGoal(this, 1.0D, 20, 15.0F);
+    private final Goal fleeEndermanGoal = new AvoidEntityGoal(this, EnderMan.class, 6.0F, 1.0D, 1.0D);
+
 
     public Human(EntityType<Human> entityType, Level level) {
         super(entityType, level);
@@ -87,21 +98,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
             }
         }
 
-        if (!hasRangedWeapon) {
-            this.goalSelector.addGoal(2, new HumanMeleeAttackGoal(this, 1.0D, false));
-            this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, EnderMan.class, true, false));
-        }
-        else {
-            this.goalSelector.addGoal(2, new RangedHumanBowAttackGoal(this, 1.0D, 20, 15.0F));
-            this.goalSelector.addGoal(3, new AvoidEntityGoal(this, EnderMan.class, 6.0F, 1.0D, 1.0D));
-        }
 
-        if (!canFightCreepers) {
-            this.goalSelector.addGoal(3, new AvoidEntityGoal(this, Creeper.class, 6.0F, 1.0D, 1.0D));
-        }
-        else {
-            this.targetSelector.addGoal(10, new NearestAttackableTargetGoal(this, Creeper.class, true, true));
-        }
 
     }
 
@@ -143,19 +140,75 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         }
         this.populateDefaultEquipmentSlots(randomSource, difficultyInstance);
         this.populateDefaultEquipmentEnchantments(randomSource, difficultyInstance);
+        this.reassessWeaponGoal();
         return super.finalizeSpawn(serverLevelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
     }
+
+    public void readAdditionalSaveData(CompoundTag compoundTag) {
+        super.readAdditionalSaveData(compoundTag);
+        this.reassessWeaponGoal();
+    }
+
+    public void setItemSlot(EquipmentSlot equipmentSlot, ItemStack itemStack) {
+        super.setItemSlot(equipmentSlot, itemStack);
+        if (!this.level().isClientSide) {
+            this.reassessWeaponGoal();
+        }
+
+    }
+
+    public void reassessWeaponGoal() {
+        if (this.level() != null && !this.level().isClientSide) {
+            this.goalSelector.removeGoal(this.meleeGoal);
+            this.goalSelector.removeGoal(this.bowGoal);
+            this.goalSelector.removeGoal(this.aggroEndermanGoal);
+            this.goalSelector.removeGoal(this.fleeEndermanGoal);
+            this.goalSelector.removeGoal(this.fleeCreeperGoal);
+            this.goalSelector.removeGoal(this.aggroCreeperGoal);
+
+            this.hasRangedWeapon = false;
+            this.canFightCreepers = false;
+
+            ItemStack itemStack = this.getMainHandItem();
+            if (itemStack.is(Items.BOW)) {
+                this.hasRangedWeapon = true;
+                this.canFightCreepers = true;
+            } else if (itemStack.getDamageValue() > 3) {
+                this.canFightCreepers = true;
+            }
+            if (!hasRangedWeapon) {
+                this.goalSelector.addGoal(2, meleeGoal);
+                this.targetSelector.addGoal(3, aggroEndermanGoal);
+            }
+            else {
+                this.goalSelector.addGoal(2, bowGoal);
+                this.goalSelector.addGoal(3, fleeEndermanGoal);
+            }
+
+            if (!canFightCreepers) {
+                this.goalSelector.addGoal(3, fleeCreeperGoal);
+            }
+            else {
+                this.targetSelector.addGoal(10, aggroCreeperGoal);
+            }
+
+        }
+
+    }
+
 
 
 
     public void performRangedAttack(LivingEntity livingEntity, float f) {
         ItemStack itemStack = this.getProjectile(this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, Items.BOW)));
         AbstractArrow abstractArrow = ProjectileUtil.getMobArrow(this, itemStack, f);
-        double d = livingEntity.getX() - this.getX();
-        double e = livingEntity.getY(0.33333333333333333D) - abstractArrow.getY();
-        double g = livingEntity.getZ() - this.getZ();
-        double h = Math.sqrt(d * d + g * g);
-        abstractArrow.shoot(d, e + h * 0.1D, g, 3.0F, (float)(12 - this.level().getDifficulty().getId() * 4));
+        double x = livingEntity.getX() - this.getX();
+        double y = livingEntity.getY(0.33333333333333333D) - abstractArrow.getY();
+        double z = livingEntity.getZ() - this.getZ();
+        double d = Math.sqrt(x * x + z * z);
+
+        Vec3 du = livingEntity.getDeltaMovement().scale(d / arrowVelocity);
+        abstractArrow.shoot(x + du.x, y + d * 0.1D, z + du.z, (float)arrowVelocity, (float)(12 - this.level().getDifficulty().getId() * 4));
         this.playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
         this.level().addFreshEntity(abstractArrow);
     }
@@ -291,7 +344,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
 
         if (this.isSprinting()) {
             this.level().playSound((Player)null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, this.getSoundSource(), 1.0F, 1.0F);
-            knockback++;
+            knockback += 1.0f;
         }
 
         int i = EnchantmentHelper.getFireAspect(this);
@@ -305,14 +358,12 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
             this.magicCrit(entity);
         }
 
-        Vec3 currentDeltaMovement = entity.getDeltaMovement();
 
         boolean bl = entity.hurt(this.damageSources().mobAttack(this), damage);
         if (bl) {
 
 
             if (knockback > 0.0F && entity instanceof LivingEntity) {
-                entity.setDeltaMovement(currentDeltaMovement);
                 ((LivingEntity)entity).knockback((double)(knockback * 0.5F), (double)Mth.sin(this.getYRot() * 0.017453292F), (double)(-Mth.cos(this.getYRot() * 0.017453292F)));
                 this.setDeltaMovement(this.getDeltaMovement().multiply(0.6D, 1.0D, 0.6D));
                 this.setSprinting(false);
