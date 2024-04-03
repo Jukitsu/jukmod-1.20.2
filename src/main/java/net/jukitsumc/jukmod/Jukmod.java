@@ -52,7 +52,7 @@ public class Jukmod implements ModInitializer {
 
 		LOGGER.info("1.8 Miss Penalty Removed ! :D");
 		FabricDefaultAttributeRegistry.register(HUMAN, Human.createHumanAttributes());
-		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(Biomes.PLAINS, Biomes.BEACH, Biomes.FOREST, Biomes.DESERT, Biomes.SAVANNA, Biomes.WINDSWEPT_HILLS, Biomes.SNOWY_PLAINS), MobCategory.CREATURE, HUMAN, 24, 2, 12);
+		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(Biomes.PLAINS, Biomes.BEACH, Biomes.FOREST, Biomes.DESERT, Biomes.SAVANNA, Biomes.WINDSWEPT_HILLS, Biomes.SNOWY_PLAINS), MobCategory.CREATURE, HUMAN, 12, 6, 20);
 		SpawnPlacements.register(HUMAN, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Human::checkHumanSpawnRules);
 		Registry.register(BuiltInRegistries.ITEM, new ResourceLocation("jukmod", "human_spawn_egg"), HUMAN_SPAWN_EGG);
 
