@@ -604,7 +604,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         }
 
         public boolean canUse() {
-            return this.mob.getTarget() == null ? false : this.isHoldingBow();
+            return this.mob.getTarget() != null && this.isHoldingBow();
         }
 
         protected boolean isHoldingBow() {
@@ -622,6 +622,12 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
 
         public void stop() {
             super.stop();
+
+            LivingEntity livingEntity = this.mob.getTarget();
+            if (!EntitySelector.NO_CREATIVE_OR_SPECTATOR.test(livingEntity)) {
+                this.mob.setTarget((LivingEntity)null);
+            }
+
             this.mob.setAggressive(false);
             this.seeTime = 0;
             this.attackTime = -1;

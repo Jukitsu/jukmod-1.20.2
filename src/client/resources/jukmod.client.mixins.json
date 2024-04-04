@@ -6,7 +6,8 @@
 		"MultiPlayerGameModeMixin",
 		"LivingEntityRendererMixin",
 		"ItemInHandRendererMixin",
-		"IllagerModelMixin"
+		"IllagerModelMixin",
+		"OverlayTextureMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
