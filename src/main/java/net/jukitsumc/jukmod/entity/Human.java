@@ -18,6 +18,7 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -359,7 +360,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         }
 
 
-        boolean bl = entity.hurt(this.damageSources().mobAttack(this), damage);
+        boolean bl = entity.hurt(this.damageSources().source(DamageTypes.PLAYER_ATTACK, this), damage);
         if (bl) {
 
 
