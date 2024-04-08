@@ -612,7 +612,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         }
 
         public boolean canContinueToUse() {
-            return (this.canUse() || !this.mob.getNavigation().isDone()) && this.isHoldingBow();
+            return this.mob.getTarget() != null && (this.canUse() || !this.mob.getNavigation().isDone()) && this.isHoldingBow();
         }
 
         public void start() {
