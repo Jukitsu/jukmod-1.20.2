@@ -9,8 +9,8 @@ public class JukmodHUD implements HudRenderCallback {
 
     @Override
     public void onHudRender(GuiGraphics drawContext, float tickDelta) {
-        if (!client.options.renderDebug) {
-            drawContext.drawString(this.client.font, "Minecraft 1.20.1", 2, 2, 0xffffffff, true);
+        if (!client.getDebugOverlay().showDebugScreen()) {
+            drawContext.drawString(this.client.font, "Minecraft 1.20.4", 2, 2, 0xffffffff, true);
         }
     }
 

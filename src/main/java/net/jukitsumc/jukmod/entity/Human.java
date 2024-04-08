@@ -397,8 +397,8 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     }
 
     @Override
-    public double getMeleeAttackRangeSqr(LivingEntity livingEntity) {
-        return 9.0D;
+    public boolean isWithinMeleeAttackRange(LivingEntity livingEntity) {
+        return this.distanceToSqr(livingEntity) <= 9.0D;
     }
 
 
@@ -524,7 +524,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
             LivingEntity livingEntity = this.mob.getTarget();
             if (livingEntity != null) {
                 this.mob.getLookControl().setLookAt(livingEntity, 30.0F, 30.0F);
-                double d = this.mob.getPerceivedTargetDistanceSquareForMeleeAttack(livingEntity);
+                double d = this.mob.distanceToSqr(livingEntity);
                 this.ticksUntilNextPathRecalculation = Math.max(this.ticksUntilNextPathRecalculation - 1, 0);
                 if ((this.followingTargetEvenIfNotSeen || this.mob.getSensing().hasLineOfSight(livingEntity)) && this.ticksUntilNextPathRecalculation <= 0 && (this.pathedTargetX == 0.0D && this.pathedTargetY == 0.0D && this.pathedTargetZ == 0.0D || livingEntity.distanceToSqr(this.pathedTargetX, this.pathedTargetY, this.pathedTargetZ) >= 1.0D || this.mob.getRandom().nextFloat() < 0.05F)) {
                     this.pathedTargetX = livingEntity.getX();
