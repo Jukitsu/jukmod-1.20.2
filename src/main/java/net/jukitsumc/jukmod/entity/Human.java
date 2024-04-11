@@ -1,40 +1,29 @@
 package net.jukitsumc.jukmod.entity;
 
-import com.mojang.authlib.minecraft.client.MinecraftClient;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.gui.MinecraftServerGui;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.util.VisibleForDebug;
 import net.minecraft.util.valueproviders.UniformInt;
-import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.ResetUniversalAngerTargetGoal;
-import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.animal.Ocelot;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.*;
-import net.minecraft.world.entity.monster.hoglin.Hoglin;
-import net.minecraft.world.entity.monster.piglin.PiglinAi;
 import net.minecraft.world.entity.monster.piglin.PiglinBrute;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.npc.InventoryCarrier;
@@ -71,7 +60,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     @Nullable
     private UUID persistentAngerTarget;
     private int lastTimeSinceJumped = 0;
-    private boolean canFightCreepers = false;
+    private boolean hasWeapon = false;
     private int timesBeforeNextHeal = 0;
     private boolean hasRangedWeapon = false;
     private static final double arrowVelocity = 3.0D;
@@ -91,10 +80,10 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         this.setPathfindingMalus(BlockPathTypes.DAMAGE_FIRE, -1.0F);
 
         if ((double)this.random.nextFloat() > 0.75D) {
-            this.canFightCreepers = true;
+            this.hasWeapon = true;
             if ((double)this.random.nextFloat() > 0.5D) {
                 this.hasRangedWeapon = true;
-                this.canFightCreepers = true;
+                this.hasWeapon = true;
             }
         }
 
@@ -106,15 +95,15 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new OpenDoorGoal(this, true));
-        this.goalSelector.addGoal(3, new AvoidEntityGoal(this, WitherBoss.class, 6.0F, 1.0D, 1.0D));
-        this.goalSelector.addGoal(3, new AvoidEntityGoal(this, Warden.class, 6.0F, 1.0D, 1.0D));
+        this.goalSelector.addGoal(1, new AvoidEntityGoal(this, WitherBoss.class, 6.0F, 1.0D, 1.0D));
+        this.goalSelector.addGoal(1, new AvoidEntityGoal(this, Warden.class, 6.0F, 1.0D, 1.0D));
         this.goalSelector.addGoal(3, new AvoidEntityGoal(this, Vex.class, 6.0F, 1.0D, 1.0D));
         this.goalSelector.addGoal(3, new AvoidEntityGoal(this, Zoglin.class, 6.0F, 1.0D, 1.0D));
         this.goalSelector.addGoal(3, new AvoidEntityGoal(this, PiglinBrute.class, 6.0F, 1.0D, 1.0D));
         this.goalSelector.addGoal(4, new WaterAvoidingRandomStrollGoal(this, 1.0D));
         this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, 6.0F));
         this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
-        this.targetSelector.addGoal(1, new HurtByTargetGoal(this).setAlertOthers(Human.class));
+        this.targetSelector.addGoal(2, new HurtByTargetGoal(this).setAlertOthers(Human.class));
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal(this, EnderDragon.class, true, false));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, Blaze.class, true, false));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, Raider.class, true, false));
@@ -130,7 +119,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor serverLevelAccessor, DifficultyInstance difficultyInstance, MobSpawnType mobSpawnType, @Nullable SpawnGroupData spawnGroupData, @Nullable CompoundTag compoundTag) {
         RandomSource randomSource = serverLevelAccessor.getRandom();
 
-        if (this.canFightCreepers) {
+        if (this.hasWeapon) {
             if (this.hasRangedWeapon) {
                 this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.BOW));
             } else {
@@ -167,30 +156,27 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
             this.goalSelector.removeGoal(this.aggroCreeperGoal);
 
             this.hasRangedWeapon = false;
-            this.canFightCreepers = false;
+            this.hasWeapon = false;
 
             ItemStack itemStack = this.getMainHandItem();
             if (itemStack.is(Items.BOW)) {
                 this.hasRangedWeapon = true;
-                this.canFightCreepers = true;
+                this.hasWeapon = true;
             } else if (itemStack.getDamageValue() > 3) {
-                this.canFightCreepers = true;
+                this.hasWeapon = true;
             }
             if (!hasRangedWeapon) {
                 this.goalSelector.addGoal(2, meleeGoal);
                 this.targetSelector.addGoal(3, aggroEndermanGoal);
+                this.goalSelector.addGoal(3, fleeCreeperGoal);
             }
             else {
                 this.goalSelector.addGoal(2, bowGoal);
                 this.goalSelector.addGoal(3, fleeEndermanGoal);
+                this.targetSelector.addGoal(5, aggroCreeperGoal);
             }
 
-            if (!canFightCreepers) {
-                this.goalSelector.addGoal(3, fleeCreeperGoal);
-            }
-            else {
-                this.targetSelector.addGoal(10, aggroCreeperGoal);
-            }
+
 
         }
 
@@ -612,7 +598,10 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         }
 
         public boolean canContinueToUse() {
-            return this.mob.getTarget() != null && (this.canUse() || !this.mob.getNavigation().isDone()) && this.isHoldingBow();
+            return this.mob.getTarget() != null
+                    && this.mob.getTarget().isAlive()
+                    && (this.canUse() || !this.mob.getNavigation().isDone())
+                    && this.isHoldingBow();
         }
 
         public void start() {
