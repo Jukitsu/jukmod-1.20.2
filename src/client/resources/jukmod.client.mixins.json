@@ -8,7 +8,9 @@
 		"IllagerModelMixin",
 		"OverlayTextureMixin",
 		"HumanoidModelMixin",
-		"ItemInHandRendererMixin"
+		"ItemInHandRendererMixin",
+		"ClientPacketListenerMixin",
+		"RemotePlayerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

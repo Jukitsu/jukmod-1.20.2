@@ -7,7 +7,9 @@
 		"BodyRotationControlMixin",
 		"MobMixin",
 		"RangedBowAttackGoalMixin",
-		"SwellGoalMixin"
+		"SwellGoalMixin",
+		"PathfinderMobMixin",
+		"ServerEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

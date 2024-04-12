@@ -21,9 +21,12 @@ import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.ResetUniversalAngerTargetGoal;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.*;
+import net.minecraft.world.entity.monster.breeze.Breeze;
 import net.minecraft.world.entity.monster.piglin.PiglinBrute;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.npc.InventoryCarrier;
@@ -66,7 +69,6 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     private static final double arrowVelocity = 3.0D;
 
     private final Goal meleeGoal = new HumanMeleeAttackGoal(this, 1.0D, false);
-    private final Goal aggroEndermanGoal = new NearestAttackableTargetGoal(this, EnderMan.class, true, false);
     private final Goal fleeCreeperGoal = new AvoidEntityGoal(this, Creeper.class, 6.0F, 1.0D, 1.0D);
     private final Goal aggroCreeperGoal = new NearestAttackableTargetGoal(this, Creeper.class, true, true);
     private final Goal bowGoal = new RangedHumanBowAttackGoal(this, 1.0D, 20, 15.0F);
@@ -78,6 +80,8 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         this.setCanPickUpLoot(true);
         this.setPathfindingMalus(BlockPathTypes.DANGER_FIRE, 16.0F);
         this.setPathfindingMalus(BlockPathTypes.DAMAGE_FIRE, -1.0F);
+        ((GroundPathNavigation)this.getNavigation()).setCanOpenDoors(true);
+        this.getNavigation().setCanFloat(true);
 
         if ((double)this.random.nextFloat() > 0.75D) {
             this.hasWeapon = true;
@@ -95,8 +99,8 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new OpenDoorGoal(this, true));
-        this.goalSelector.addGoal(1, new AvoidEntityGoal(this, WitherBoss.class, 6.0F, 1.0D, 1.0D));
-        this.goalSelector.addGoal(1, new AvoidEntityGoal(this, Warden.class, 6.0F, 1.0D, 1.0D));
+        this.goalSelector.addGoal(1, new AvoidEntityGoal(this, WitherBoss.class, 24.0F, 1.0D, 1.0D));
+        this.goalSelector.addGoal(1, new AvoidEntityGoal(this, Warden.class, 12.0F, 1.0D, 1.0D));
         this.goalSelector.addGoal(3, new AvoidEntityGoal(this, Vex.class, 6.0F, 1.0D, 1.0D));
         this.goalSelector.addGoal(3, new AvoidEntityGoal(this, Zoglin.class, 6.0F, 1.0D, 1.0D));
         this.goalSelector.addGoal(3, new AvoidEntityGoal(this, PiglinBrute.class, 6.0F, 1.0D, 1.0D));
@@ -107,9 +111,10 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal(this, EnderDragon.class, true, false));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, Blaze.class, true, false));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, Raider.class, true, false));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, ElderGuardian.class, true, false));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, Guardian.class, true, false));
         this.targetSelector.addGoal(4, new NearestAttackableTargetGoal(this, Silverfish.class, true, false));
         this.targetSelector.addGoal(4, new NearestAttackableTargetGoal(this, Endermite.class, true, false));
+        this.targetSelector.addGoal(4, new NearestAttackableTargetGoal(this, Breeze.class, true, false));
         this.targetSelector.addGoal(5, new ResetUniversalAngerTargetGoal(this, false));
 
 
@@ -150,7 +155,6 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         if (this.level() != null && !this.level().isClientSide) {
             this.goalSelector.removeGoal(this.meleeGoal);
             this.goalSelector.removeGoal(this.bowGoal);
-            this.goalSelector.removeGoal(this.aggroEndermanGoal);
             this.goalSelector.removeGoal(this.fleeEndermanGoal);
             this.goalSelector.removeGoal(this.fleeCreeperGoal);
             this.goalSelector.removeGoal(this.aggroCreeperGoal);
@@ -167,7 +171,6 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
             }
             if (!hasRangedWeapon) {
                 this.goalSelector.addGoal(2, meleeGoal);
-                this.targetSelector.addGoal(3, aggroEndermanGoal);
                 this.goalSelector.addGoal(3, fleeCreeperGoal);
             }
             else {
