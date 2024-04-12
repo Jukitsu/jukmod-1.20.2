@@ -18,17 +18,17 @@ import java.util.function.Predicate;
 
 public class AvoidSwollenCreeperGoal extends Goal {
     protected final PathfinderMob mob;
-    private final double walkSpeedModifier;
-    private final double sprintSpeedModifier;
-    @Nullable
-    protected Creeper toAvoid;
     protected final float maxDist;
-    @Nullable
-    protected Path path;
     protected final PathNavigation pathNav;
     protected final Predicate<LivingEntity> avoidPredicate;
     protected final Predicate<LivingEntity> predicateOnAvoidEntity;
+    private final double walkSpeedModifier;
+    private final double sprintSpeedModifier;
     private final TargetingConditions avoidEntityTargeting;
+    @Nullable
+    protected Creeper toAvoid;
+    @Nullable
+    protected Path path;
 
     public AvoidSwollenCreeperGoal(PathfinderMob pathfinderMob, float f, double d, double e) {
         this(pathfinderMob, livingEntity -> true, f, d, e, EntitySelector.NO_CREATIVE_OR_SPECTATOR::test);
@@ -61,11 +61,11 @@ public class AvoidSwollenCreeperGoal extends Goal {
             return false;
         }
 
-        Vec3 vec3 = DefaultRandomPos.getPosAway(this.mob, 16, 7, ((Entity)this.toAvoid).position());
+        Vec3 vec3 = DefaultRandomPos.getPosAway(this.mob, 16, 7, this.toAvoid.position());
         if (vec3 == null) {
             return false;
         }
-        if (((Entity)this.toAvoid).distanceToSqr(vec3.x, vec3.y, vec3.z) < ((Entity)this.toAvoid).distanceToSqr(this.mob)) {
+        if (this.toAvoid.distanceToSqr(vec3.x, vec3.y, vec3.z) < this.toAvoid.distanceToSqr(this.mob)) {
             return false;
         }
         this.path = this.pathNav.createPath(vec3.x, vec3.y, vec3.z, 0);
@@ -89,7 +89,7 @@ public class AvoidSwollenCreeperGoal extends Goal {
 
     @Override
     public void tick() {
-        if (this.mob.distanceToSqr((Entity)this.toAvoid) < 49.0) {
+        if (this.mob.distanceToSqr(this.toAvoid) < 49.0) {
             this.mob.getNavigation().setSpeedModifier(this.sprintSpeedModifier);
         } else {
             this.mob.getNavigation().setSpeedModifier(this.walkSpeedModifier);

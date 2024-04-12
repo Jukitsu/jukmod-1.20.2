@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(IllagerModel.class)
 public class IllagerModelMixin<T extends AbstractIllager> {
-    @Redirect(method="setupAnim", at=@At(value="INVOKE", target="Lnet/minecraft/world/item/ItemStack;isEmpty()Z"))
+    @Redirect(method = "setupAnim", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z"))
     public boolean bringBackOldIllagers(ItemStack stack) {
         return false;
     }

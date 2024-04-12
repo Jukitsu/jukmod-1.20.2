@@ -10,16 +10,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 
-
 @Mixin(ItemInHandRenderer.class)
 public class ItemInHandRendererMixin {
     @Inject(
-        method = "applyItemArmAttackTransform",
-        at = @At(value = "HEAD")
+            method = "applyItemArmAttackTransform",
+            at = @At(value = "HEAD")
     )
-    private void onApplyItemArmAttackTransform(PoseStack poseStack, HumanoidArm hand, float swingProgress, CallbackInfo callback)
-    {
-        float progress = Mth.sin((float)Math.PI * swingProgress);
+    private void onApplyItemArmAttackTransform(PoseStack poseStack, HumanoidArm hand, float swingProgress, CallbackInfo callback) {
+        float progress = Mth.sin((float) Math.PI * swingProgress);
         float scale = 1.0F - (0.3F * progress);
 
         poseStack.translate(-0.12F * progress, 0.085F * progress, 0.0F);

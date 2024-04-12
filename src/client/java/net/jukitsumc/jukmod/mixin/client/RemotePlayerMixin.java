@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(RemotePlayer.class)
 public class RemotePlayerMixin {
 
-    @Shadow protected Vec3 lerpDeltaMovement;
     @Shadow protected int lerpDeltaMovementSteps;
     @Inject(method="lerpMotion", at=@At("TAIL"))
     public void dontLerpMotion(double d, double e, double f, CallbackInfo info) {

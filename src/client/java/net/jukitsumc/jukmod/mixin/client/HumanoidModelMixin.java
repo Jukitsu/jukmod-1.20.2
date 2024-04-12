@@ -14,20 +14,27 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(HumanoidModel.class)
 public abstract class HumanoidModelMixin<T extends LivingEntity> extends AgeableListModel<T> {
 
-    @Shadow protected abstract HumanoidArm getAttackArm(T livingEntity);
-    @Shadow protected abstract ModelPart getArm(HumanoidArm humanoidArm);
-
-    @Shadow @Final
+    @Shadow
+    @Final
     public ModelPart head;
-    @Shadow @Final
+    @Shadow
+    @Final
     public ModelPart hat;
-    @Shadow @Final
+    @Shadow
+    @Final
     public ModelPart body;
-    @Shadow @Final
+    @Shadow
+    @Final
     public ModelPart rightArm;
-    @Shadow @Final
+    @Shadow
+    @Final
     public ModelPart leftArm;
 
+    @Shadow
+    protected abstract HumanoidArm getAttackArm(T livingEntity);
+
+    @Shadow
+    protected abstract ModelPart getArm(HumanoidArm humanoidArm);
 
     @Overwrite
     public void setupAttackAnimation(T livingEntity, float f) {
@@ -48,12 +55,9 @@ public abstract class HumanoidModelMixin<T extends LivingEntity> extends Ageable
             this.rightArm.yRot += this.body.yRot;
             this.leftArm.yRot += this.body.yRot;
 
-            if (humanoidArm == HumanoidArm.LEFT)
-            {
+            if (humanoidArm == HumanoidArm.LEFT) {
                 this.rightArm.xRot -= this.body.yRot;
-            }
-            else
-            {
+            } else {
                 this.leftArm.xRot += this.body.yRot;
             }
 
@@ -65,13 +69,10 @@ public abstract class HumanoidModelMixin<T extends LivingEntity> extends Ageable
             float i = Mth.sin(this.attackTime * 3.1415927F) * -(this.head.xRot - 0.7F) * 0.75F;
             modelPart.xRot -= h * 1.2F + i;
             modelPart.yRot += this.body.yRot * 2.0F;
-            if (humanoidArm == HumanoidArm.LEFT)
-            {
-                modelPart.zRot += Mth.sin(this.attackTime * (float)Math.PI) * 0.4F;
-            }
-            else
-            {
-                modelPart.zRot -= Mth.sin(this.attackTime * (float)Math.PI) * 0.4F;
+            if (humanoidArm == HumanoidArm.LEFT) {
+                modelPart.zRot += Mth.sin(this.attackTime * (float) Math.PI) * 0.4F;
+            } else {
+                modelPart.zRot -= Mth.sin(this.attackTime * (float) Math.PI) * 0.4F;
             }
         }
     }

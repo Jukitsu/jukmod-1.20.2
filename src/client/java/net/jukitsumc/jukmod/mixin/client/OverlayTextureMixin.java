@@ -17,15 +17,14 @@ public abstract class OverlayTextureMixin {
     @Final
     private DynamicTexture texture;
 
-    @Inject(method = "<init>", at = @At("TAIL"))
-    public void modifyHitColor(CallbackInfo ci) {
-        this.reloadOverlay();
-    }
-
-
     private static int getColorInt(int red, int green, int blue, int alpha) {
         alpha = 255 - alpha;
         return (alpha << 24) + (blue << 16) + (green << 8) + red;
+    }
+
+    @Inject(method = "<init>", at = @At("TAIL"))
+    public void modifyHitColor(CallbackInfo ci) {
+        this.reloadOverlay();
     }
 
     public void reloadOverlay() {

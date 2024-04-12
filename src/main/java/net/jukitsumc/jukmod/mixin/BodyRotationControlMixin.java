@@ -15,13 +15,13 @@ public abstract class BodyRotationControlMixin {
     @Final
     private Mob mob;
 
-    @Shadow public abstract void rotateBodyIfNecessary();
+    @Shadow
+    public abstract void rotateBodyIfNecessary();
 
     @Redirect(method = "clientTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Mob;getYRot()F"))
     public float clientTick(Mob mob) {
         return mob.yBodyRot;
     }
-
 
 
 }

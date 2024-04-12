@@ -13,8 +13,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SwellGoal.class)
 public class SwellGoalMixin {
-    @Shadow @Final private Creeper creeper;
-    @Shadow @Nullable
+    @Shadow
+    @Final
+    private Creeper creeper;
+    @Shadow
+    @Nullable
     private LivingEntity target;
 
     @Inject(method = "tick", at = @At("TAIL"))

@@ -1,32 +1,34 @@
 package net.jukitsumc.jukmod.mixin;
 
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
 
-    @Shadow protected double lerpX;
-    @Shadow protected double lerpY;
-    @Shadow protected double lerpZ;
-    @Shadow protected double lerpYRot;
-    @Shadow protected double lerpXRot;
-    @Shadow protected int lerpSteps;
+    @Shadow
+    protected double lerpX;
+    @Shadow
+    protected double lerpY;
+    @Shadow
+    protected double lerpZ;
+    @Shadow
+    protected double lerpYRot;
+    @Shadow
+    protected double lerpXRot;
+    @Shadow
+    protected int lerpSteps;
 
-    private Vec3 lerpDeltaMovement = Vec3.ZERO;
+    private final Vec3 lerpDeltaMovement = Vec3.ZERO;
     private int lerpDeltaMovementSteps;
+
     protected LivingEntityMixin(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
     }

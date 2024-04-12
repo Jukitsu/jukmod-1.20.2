@@ -1,6 +1,5 @@
 package net.jukitsumc.jukmod.mixin;
 
-import net.jukitsumc.jukmod.entity.AvoidSwollenCreeperGoal;
 import net.jukitsumc.jukmod.entity.Human;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
@@ -10,7 +9,6 @@ import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.ai.control.BodyRotationControl;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,22 +23,25 @@ public abstract class MobMixin extends LivingEntity {
 
     @Shadow
     @Final
+    protected GoalSelector targetSelector;
+    @Shadow
+    @Final
+    protected GoalSelector goalSelector;
+    @Shadow
+    @Final
     private BodyRotationControl bodyRotationControl;
-
-    @Shadow @Final protected GoalSelector targetSelector;
-
-    @Shadow public abstract int getMaxHeadYRot();
-
-    @Shadow @Final protected GoalSelector goalSelector;
 
     protected MobMixin(EntityType<? extends Mob> entityType, Level level) {
         super(entityType, level);
     }
 
-    @Inject(method="<init>", at=@At("TAIL"))
+    @Shadow
+    public abstract int getMaxHeadYRot();
+
+    @Inject(method = "<init>", at = @At("TAIL"))
     public void targetHumanIfHostile(EntityType<? extends Mob> entityType, Level level, CallbackInfo info) {
         if (level != null && !level.isClientSide && !entityType.getCategory().isFriendly() && !(this instanceof NeutralMob)) {
-            this.targetSelector.addGoal(2, new NearestAttackableTargetGoal((Mob)(Object)this, Human.class, true));
+            this.targetSelector.addGoal(2, new NearestAttackableTargetGoal((Mob) (Object) this, Human.class, true));
         }
     }
 
