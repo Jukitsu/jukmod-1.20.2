@@ -14,7 +14,7 @@ public class RemotePlayerMixin {
 
     @Shadow protected int lerpDeltaMovementSteps;
     @Inject(method="lerpMotion", at=@At("TAIL"))
-    public void dontLerpMotion(double d, double e, double f, CallbackInfo info) {
-        this.lerpDeltaMovementSteps = 1;
+    public void properlyLerpMotion(double d, double e, double f, CallbackInfo info) {
+        this.lerpDeltaMovementSteps = 2;
     }
 }
