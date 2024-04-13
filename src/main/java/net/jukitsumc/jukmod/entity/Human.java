@@ -420,6 +420,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
                     || (!isAggressive() && (double) this.random.nextFloat() < 0.125D)) {
                 this.jumpControl.jump();
                 if (this.isSprinting()) {
+                    this.hasImpulse = true;
                     float f = this.getYRot() * 0.017453292F;
                     this.setDeltaMovement(this.getDeltaMovement().add(-Mth.sin(f) * 0.2F, 0.0D, Mth.cos(f) * 0.2F));
                 }
