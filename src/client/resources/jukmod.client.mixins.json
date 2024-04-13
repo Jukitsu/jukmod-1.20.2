@@ -10,7 +10,8 @@
 		"HumanoidModelMixin",
 		"ItemInHandRendererMixin",
 		"ClientPacketListenerMixin",
-		"RemotePlayerMixin"
+		"RemotePlayerMixin",
+		"AnimationUtilsMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
