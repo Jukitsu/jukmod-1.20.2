@@ -19,11 +19,11 @@ in vec4 normal;
 out vec4 fragColor;
 
 void main() {
-    vec4 color = texture(Sampler0, texCoord0);
+    vec4 color = texture(Sampler0, texCoord0) * ColorModulator;
     if (color.a < 0.1) {
         discard;
     }
     color.rgb = mix(overlayColor.rgb, color.rgb, overlayColor.a);
-    color *= vertexColor * ColorModulator;
+    color *= vertexColor;
     fragColor = linear_fog(color, vertexDistance, FogStart, FogEnd, FogColor);
 }
