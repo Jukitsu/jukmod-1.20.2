@@ -330,7 +330,6 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         }
 
         if (this.isSprinting()) {
-            this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, this.getSoundSource(), 1.0F, 1.0F);
             knockback += 1.0f;
         }
 
@@ -339,8 +338,6 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
             entity.setSecondsOnFire(i * 4);
         }
 
-        this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_STRONG, this.getSoundSource(), 1.0F, 1.0F);
-
         if (damageBonus > 0.0F) {
             this.magicCrit(entity);
         }
@@ -348,9 +345,10 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
 
         boolean bl = entity.hurt(this.damageSources().mobAttack(this), damage);
         if (bl) {
-
+            this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_STRONG, this.getSoundSource(), 1.0F, 1.0F);
 
             if (knockback > 0.0F && entity instanceof LivingEntity) {
+                this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, this.getSoundSource(), 1.0F, 1.0F);
                 ((LivingEntity) entity).knockback(knockback * 0.5F, Mth.sin(this.getYRot() * 0.017453292F), -Mth.cos(this.getYRot() * 0.017453292F));
                 this.setDeltaMovement(this.getDeltaMovement().multiply(0.6D, 1.0D, 0.6D));
                 this.setSprinting(false);
@@ -417,7 +415,8 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
 
         if (isMoving && this.onGround() && this.lastTimeSinceJumped > 16) {
             if ((isAggressive() && !this.hasRangedWeapon && this.getTarget() != null && distanceToSqr(this.getTarget()) > 144.0F)
-                    || (!isAggressive() && (double) this.random.nextFloat() < 0.125D)) {
+                    || (!isAggressive() && (double) this.random.nextFloat() < 0.125D)
+                    || (isAggressive() && (double) this.random.nextFloat() < 0.01D)) {
                 this.jumpControl.jump();
                 if (this.isSprinting()) {
                     this.hasImpulse = true;
