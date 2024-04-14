@@ -27,7 +27,7 @@ public abstract class LivingEntityMixin extends Entity {
 
     @Overwrite
     protected void blockedByShield(LivingEntity livingEntity) {
-        this.knockback(0.5, this.getX() - livingEntity.getX(), this.getZ() - livingEntity.getZ());
+        this.knockback(0.5, livingEntity.getX() - this.getX(), livingEntity.getZ() - this.getZ());
     }
 
 
