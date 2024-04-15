@@ -16,6 +16,7 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SwordItem;
 
 public class HumanModel extends HumanoidModel<Human> {
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(new ResourceLocation("jukmod", "humanmodel"), "main");
@@ -55,6 +56,13 @@ public class HumanModel extends HumanoidModel<Human> {
                 this.rightArmPose = ArmPose.BOW_AND_ARROW;
             } else {
                 this.leftArmPose = ArmPose.BOW_AND_ARROW;
+            }
+        }
+        else if (itemStack.getItem() instanceof SwordItem && mob.isSwordBlocking()) {
+            if (mob.getMainArm() == HumanoidArm.RIGHT) {
+                this.rightArmPose = ArmPose.BLOCK;
+            } else {
+                this.leftArmPose = ArmPose.BLOCK;
             }
         }
 

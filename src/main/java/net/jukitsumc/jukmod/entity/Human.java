@@ -1,10 +1,16 @@
 package net.jukitsumc.jukmod.entity;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.TimeUtil;
@@ -13,6 +19,8 @@ import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -24,6 +32,7 @@ import net.minecraft.world.entity.ai.goal.target.ResetUniversalAngerTargetGoal;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.*;
 import net.minecraft.world.entity.monster.breeze.Breeze;
 import net.minecraft.world.entity.monster.piglin.PiglinBrute;
@@ -34,10 +43,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.entity.raid.Raider;
-import net.minecraft.world.item.AxeItem;
-import net.minecraft.world.item.BowItem;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -45,18 +51,24 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 
 public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCarrier, RangedAttackMob {
     private static final int ALERT_RANGE_Y = 64;
     private static final UniformInt ALERT_INTERVAL;
     private static final UniformInt PERSISTENT_ANGER_TIME;
+    private static final EntityDataAccessor<Boolean> BLOCKING_STATE_ID = SynchedEntityData.defineId(Human.class, EntityDataSerializers.BOOLEAN);
     private static final double arrowVelocity = 3.0D;
+    private boolean blocking = false;
+    private int blockingTimer = 0;
 
     static {
         PERSISTENT_ANGER_TIME = TimeUtil.rangeOfSeconds(20, 39);
@@ -67,7 +79,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     private final Goal meleeGoal = new HumanMeleeAttackGoal(this, 1.0D, false);
     private final Goal fleeCreeperGoal = new AvoidEntityGoal(this, Creeper.class, 6.0F, 1.0D, 1.0D);
     private final Goal aggroCreeperGoal = new NearestAttackableTargetGoal(this, Creeper.class, true, true);
-    private final Goal bowGoal = new RangedHumanBowAttackGoal(this, 1.0D, 20, 15.0F);
+    private final Goal bowGoal = new RangedHumanBowAttackGoal(this, 0.8D, 20, 80.0F);
     private final Goal fleeEndermanGoal = new AvoidEntityGoal(this, EnderMan.class, 6.0F, 1.0D, 1.0D);
     private int ticksUntilNextAlert;
     private int remainingPersistentAngerTime;
@@ -75,6 +87,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     private UUID persistentAngerTarget;
     private int lastTimeSinceJumped = 0;
     private boolean hasWeapon = false;
+    private boolean hasSword = false;
     private int timesBeforeNextHeal = 0;
     private boolean hasRangedWeapon = false;
 
@@ -160,6 +173,8 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         }
 
     }
+    
+    public boolean isSwordBlocking() { return blocking; }
 
     public void reassessWeaponGoal() {
         if (this.level() != null && !this.level().isClientSide) {
@@ -171,12 +186,14 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
 
             this.hasRangedWeapon = false;
             this.hasWeapon = false;
+            this.hasSword = false;
 
             ItemStack itemStack = this.getMainHandItem();
             if (itemStack.is(Items.BOW)) {
                 this.hasRangedWeapon = true;
                 this.hasWeapon = true;
-            } else if (itemStack.getDamageValue() > 3) {
+            } else if (itemStack.getItem() instanceof SwordItem) {
+                this.hasSword = true;
                 this.hasWeapon = true;
             }
             if (!hasRangedWeapon) {
@@ -193,27 +210,77 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
 
     }
 
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(BLOCKING_STATE_ID, false);
+    }
+
+    @Override
     public void performRangedAttack(LivingEntity livingEntity, float f) {
         ItemStack itemStack = this.getProjectile(this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, Items.BOW)));
         AbstractArrow abstractArrow = ProjectileUtil.getMobArrow(this, itemStack, f);
+
+        // Get the vector this -> target
         double x = livingEntity.getX() - this.getX();
-        double y = livingEntity.getY(0.33333333333333333D) - abstractArrow.getY();
+        double y = livingEntity.getEyeY() - abstractArrow.getY();
         double z = livingEntity.getZ() - this.getZ();
+
         double d = Math.sqrt(x * x + z * z);
 
-        Vec3 du = livingEntity.getDeltaMovement().scale(d / arrowVelocity);
-        abstractArrow.shoot(x + du.x, y + d * 0.1D, z + du.z, (float) arrowVelocity, (float) (12 - this.level().getDifficulty().getId() * 4));
+        // Predict their movement at arrow landing, assuming the trajectory being straight
+        Vec3 ds = livingEntity.getDeltaMovement().scale(d / arrowVelocity); // ds = v * dt = v * ds'/dv'
+        double px = x + ds.x;
+        double py = y + ds.y;
+        double pz = z + ds.z;
+
+        double pd = Math.sqrt(px * px + pz * pz);
+
+        // Calculate the initial vertical velocity, defining the curve of the trajectory
+        // This took me way too long
+        // Now I understand why Skeletons don't have full-proof aimbots
+        Vec3 p3 = new Vec3(px, py, pz).normalize().scale(arrowVelocity);
+        double n = Math.sqrt(p3.x * p3.x + p3.z * p3.z) * (1.0D + d / 600); // Approximation of horizontal velocity
+        double s = pd * 0.08D * 0.5D / n;
+        double vy;
+
+        if (pd == 0.0D) {
+            vy = 0.0D;
+        } else {
+            double alpha = Math.atan(py / pd); // yaw of my predicted vector
+            double beta = Math.atan(s / Math.sqrt(p3.y * p3.y + n * n)); // additional yaw of the shot
+            vy = pd * Math.tan(alpha + beta); // get that tangent since I can't normalize the x and z coords
+        }
+
+
+        abstractArrow.shoot(px, vy, pz, (float) arrowVelocity, 0.0F);
+
         this.playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
         this.level().addFreshEntity(abstractArrow);
     }
 
-    protected ItemStack addToInventory(ItemStack itemStack) {
-        return this.inventory.addItem(itemStack);
+    @Override
+    protected void pickUpItem(ItemEntity itemEntity) {
+        ItemStack itemStack = itemEntity.getItem();
+        ItemStack itemStack2 = this.equipItemIfPossible(itemStack.copy());
+        if (!itemStack2.isEmpty()) {
+            this.onItemPickup(itemEntity);
+            this.take(itemEntity, itemStack2.getCount());
+            itemStack.shrink(itemStack2.getCount());
+            if (itemStack.isEmpty()) {
+                itemEntity.discard();
+            }
+        } else {
+            InventoryCarrier.pickUpItem(this, this, itemEntity);
+        }
+
     }
 
-    protected boolean canAddToInventory(ItemStack itemStack) {
-        return this.inventory.canAddItem(itemStack);
+    @Override
+    public boolean wantsToPickUp(ItemStack itemStack) {
+        return itemStack.isEnchantable() || itemStack.isEnchanted() || itemStack.isEdible();
     }
+
 
     @VisibleForDebug
     public SimpleContainer getInventory() {
@@ -245,6 +312,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         this.persistentAngerTarget = uUID;
     }
 
+    @Override
     protected void customServerAiStep() {
         this.updatePersistentAnger((ServerLevel) this.level(), true);
         if (this.getTarget() != null) {
@@ -300,15 +368,59 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     }
 
     public void crit(Entity entity) {
-
+        if (!this.level().isClientSide()) {
+            this.level().addParticle(ParticleTypes.CRIT, entity.getX() + this.random.nextGaussian() * (double)0.13f, entity.getBoundingBox().maxY + this.random.nextGaussian() * (double)0.13f, entity.getZ() + this.random.nextGaussian() * (double)0.13f, 0.0, 0.0, 0.0);
+        }
     }
 
     public void magicCrit(Entity entity) {
-
+        if (!this.level().isClientSide()) {
+            this.level().addParticle(ParticleTypes.ENCHANTED_HIT, entity.getX() + this.random.nextGaussian() * (double)0.13f, entity.getBoundingBox().maxY + this.random.nextGaussian() * (double)0.13f, entity.getZ() + this.random.nextGaussian() * (double)0.13f, 0.0, 0.0, 0.0);
+        }
     }
 
     public boolean removeWhenFarAway(double d) {
         return false;
+    }
+
+    private void startBlocking() {
+        this.blocking = true;
+        this.blockingTimer = random.nextInt(2, 10);
+        this.entityData.set(BLOCKING_STATE_ID, true);
+        this.setSprinting(false);
+    }
+
+    private void stopBlocking() {
+        this.blocking = false;
+        this.entityData.set(BLOCKING_STATE_ID, false);
+    }
+
+    private boolean canBlock() {
+        return this.hasSword && !this.blocking;
+    }
+    @Override
+    public boolean hurt(DamageSource damageSource, float damage) {
+        float actualDamage = damage;
+        if (damageSource.getDirectEntity() != null) {
+            if (canBlock() && this.random.nextFloat() > 0.1F) {
+                this.startBlocking();
+            }
+            if (this.isSwordBlocking()) {
+                actualDamage *= 0.5F;
+                this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, this.getSoundSource(), 1.0F, 1.0F);
+            }
+        }
+
+        return super.hurt(damageSource, actualDamage);
+    }
+
+    @Override
+    public void knockback(double d, double e, double f) {
+        double knockbackAmount = d;
+        if (this.isSwordBlocking()) {
+            knockbackAmount *= 0.5F;
+        }
+        super.knockback(knockbackAmount, e, f);
     }
 
     @Override
@@ -393,45 +505,79 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
     }
 
     @Override
+    public void travel(Vec3 vec3) {
+        Vec3 vector = vec3;
+        if (this.isBlocking() && this.isControlledByLocalInstance()) {
+            vector.multiply(0.5, 1.0, 0.5);
+        }
+        super.travel(vector);
+    }
+
+    @Override
     public void tick() {
         super.tick();
 
-        this.lastTimeSinceJumped++;
-        this.timesBeforeNextHeal++;
+        if (this.isEffectiveAi()){
+            this.lastTimeSinceJumped++;
+            this.timesBeforeNextHeal++;
+            this.blockingTimer--;
 
-        if (this.timesBeforeNextHeal >= 80) {
-            if (this.getHealth() < this.getMaxHealth()) {
-                this.heal(Math.min(1.0f, this.getMaxHealth() - this.getHealth()));
+            if (blockingTimer <= 0) {
+                this.stopBlocking();
             }
-            this.timesBeforeNextHeal = 0;
-        }
 
-        double d = this.getX() - this.xo;
-        double e = this.getZ() - this.zo;
-
-        boolean isMoving = d * d + e * e > 2.500000277905201E-7D;
-        this.setSprinting(isMoving);
-
-
-        if (isMoving && this.onGround() && this.lastTimeSinceJumped > 16) {
-            if ((isAggressive() && !this.hasRangedWeapon && this.getTarget() != null && distanceToSqr(this.getTarget()) > 144.0F)
-                    || (!isAggressive() && (double) this.random.nextFloat() < 0.125D)
-                    || (isAggressive() && (double) this.random.nextFloat() < 0.01D)) {
-                this.jumpControl.jump();
-                if (this.isSprinting()) {
-                    this.hasImpulse = true;
-                    float f = this.getYRot() * 0.017453292F;
-                    this.setDeltaMovement(this.getDeltaMovement().add(-Mth.sin(f) * 0.2F, 0.0D, Mth.cos(f) * 0.2F));
+            if (this.timesBeforeNextHeal >= 80) {
+                if (this.getHealth() < this.getMaxHealth()) {
+                    this.heal(Math.min(1.0f, this.getMaxHealth() - this.getHealth()));
                 }
-                this.lastTimeSinceJumped = 0;
+                this.timesBeforeNextHeal = 0;
             }
 
+            if (this.canBlock() && this.isAggressive()
+                    && this.getTarget() != null
+                    && this.getTarget().isAlive()
+                    && this.distanceToSqr(this.getTarget()) < 10.0F
+                    && this.random.nextFloat() < 0.1F) {
+                this.startBlocking();
+            }
+
+            double d = this.getX() - this.xo;
+            double e = this.getZ() - this.zo;
+
+            boolean isMoving = d * d + e * e > 2.500000277905201E-7D && !this.isSwordBlocking();
+            this.setSprinting(isMoving);
+
+
+            if (isMoving && this.onGround() && this.lastTimeSinceJumped > 16) {
+                if ((isAggressive() && !this.hasRangedWeapon && this.getTarget() != null && distanceToSqr(this.getTarget()) > 144.0F)
+                        || (!isAggressive() && (double) this.random.nextFloat() < 0.125D)
+                        || (isAggressive() && !this.hasRangedWeapon && (double) this.random.nextFloat() < 0.01D)) {
+                    this.jumpControl.jump();
+                    if (this.isSprinting()) {
+                        this.hasImpulse = true;
+                        float f = this.getYRot() * 0.017453292F;
+                        this.setDeltaMovement(this.getDeltaMovement().add(-Mth.sin(f) * 0.2F, 0.0D, Mth.cos(f) * 0.2F));
+                    }
+                    this.lastTimeSinceJumped = 0;
+                }
+
+            }
+        }
+    }
+
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> entityDataAccessor) {
+        super.onSyncedDataUpdated(entityDataAccessor);
+        if (BLOCKING_STATE_ID.equals(entityDataAccessor)) {
+            if (this.level().isClientSide) {
+                this.blocking = this.entityData.get(BLOCKING_STATE_ID);
+            }
         }
     }
 
     public class HumanMeleeAttackGoal extends Goal {
         private static final long COOLDOWN_BETWEEN_CAN_USE_CHECKS = 20L;
-        protected final PathfinderMob mob;
+        protected final Human mob;
         private final double speedModifier;
         private final boolean followingTargetEvenIfNotSeen;
         private final int attackInterval = 20;
@@ -443,7 +589,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         private int ticksUntilNextAttack;
         private long lastCanUseCheck;
 
-        public HumanMeleeAttackGoal(PathfinderMob pathfinderMob, double d, boolean bl) {
+        public HumanMeleeAttackGoal(Human pathfinderMob, double d, boolean bl) {
             this.mob = pathfinderMob;
             this.speedModifier = d;
             this.followingTargetEvenIfNotSeen = bl;
@@ -531,7 +677,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
 
         protected void checkAndPerformAttack(LivingEntity livingEntity, double d) {
             double e = this.getAttackReachSqr(livingEntity);
-            if (d <= e && this.ticksUntilNextAttack <= 0) {
+            if (d <= e && this.ticksUntilNextAttack <= 0 && !this.mob.isSwordBlocking()) {
                 this.resetAttackCooldown();
                 this.mob.swing(InteractionHand.MAIN_HAND);
                 this.mob.doHurtTarget(livingEntity);
@@ -658,9 +804,9 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
                 }
 
                 if (this.strafingTime > -1) {
-                    if (d > (double) (this.attackRadiusSqr * 0.75F)) {
+                    if (d > 9.0F) {
                         this.strafingBackwards = false;
-                    } else if (d < (double) (this.attackRadiusSqr * 0.25F)) {
+                    } else if (d < 6.0F) {
                         this.strafingBackwards = true;
                     }
 
