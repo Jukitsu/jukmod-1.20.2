@@ -54,15 +54,18 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 
 public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCarrier, RangedAttackMob {
     private static final int ALERT_RANGE_Y = 64;
+
+    public static final Logger LOGGER = LoggerFactory.getLogger("jukmod");
     private static final UniformInt ALERT_INTERVAL;
     private static final UniformInt PERSISTENT_ANGER_TIME;
     private static final EntityDataAccessor<Boolean> BLOCKING_STATE_ID = SynchedEntityData.defineId(Human.class, EntityDataSerializers.BOOLEAN);
@@ -216,6 +219,49 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         this.entityData.define(BLOCKING_STATE_ID, false);
     }
 
+    /*
+            Math proof:
+            Let's modelise our system in a uniform field of gravitation within
+            an inertial frame. Let's simplify the situation
+            and project the problem on a plane inclined along the direction
+            me and target with the usual basis (i, j) and the origin O.
+
+            Supposing the arrow a fixed point shot from the origin that must land
+            on the point (d, 0). We impose the arrow being fired at an absolute velocity v.
+            Since the gravitational field is always pointing downwards we can suppose the vector
+            v(vx, vy) with vx > 0 and vy > 0, and having vx > vy since we want a horizontal shot.
+            Let's seek the initial velocity vector.
+
+            We know that from the equations of motion, that y' = -g/(2vx²) * x² + vy/vx * x
+            We project on the slope where we have y = y' - h/d * x where h is the height difference
+            thus y = -g/(2vx²) * x² + (vy/vx - h/d) * x
+            where (vx, vy) is the initial velocity vector that we seek.
+
+            Given our problem we know that 0 and d are roots of y, yielding
+
+            y = ax(x - d) where a is some constant
+
+            We can deduce, given the polynomial form of y, that a = -g/(2vx²)
+            and we develop the expression, and by identification we have:
+            gd/(2vx²) = vy/vx - h/d
+            Simplifying vx we have vy = gd/2vx + hvx/d or vx * vy = 0.5gd + hvx²/d.
+            We'll approximate vx * vy = 0.5gd + he²/d which we call it c.
+            From our initial conditions, we have vx² + vy² = v², and taking the square of aforementioned equation
+            we have the system:
+
+            vx² + vy² = v²
+            vx² * vy² = c²
+
+            This system has 2 solutions since its solutions is simply the roots of the polynomial
+
+            X² - v²X + c² = 0
+
+            Taking delta = v4 - 4c² and using vx > vy we have the roots
+            vx² = (v² + sqrt(delta))/2
+            vy² = (v² - sqrt(delta))/2
+
+            which we can take the square root.
+    */
     @Override
     public void performRangedAttack(LivingEntity livingEntity, float f) {
         ItemStack itemStack = this.getProjectile(this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, Items.BOW)));
@@ -231,7 +277,7 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         // Predict their movement at arrow landing, assuming the trajectory being straight
         Vec3 ds = livingEntity.getDeltaMovement().scale(d / arrowVelocity); // ds = v * dt = v * ds'/dv'
         double px = x + ds.x;
-        double py = y + ds.y;
+        double py = y + Math.min(0.0D, ds.y); // Only account for downward velocity
         double pz = z + ds.z;
 
         double pd = Math.sqrt(px * px + pz * pz);
@@ -239,20 +285,34 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         // Calculate the initial vertical velocity, defining the curve of the trajectory
         // This took me way too long
         // Now I understand why Skeletons don't have full-proof aimbots
+
+        /*
+        double c2 = 0.0016D * pd * pd;
+        final double v2 = arrowVelocity * arrowVelocity;
+        double sqrtDelta = Math.sqrt(v2 * v2 - 4 * c2);
+        double ud = Math.sqrt(0.5D * (v2 + sqrtDelta));
+        double uy = Math.sqrt(0.5D * (v2 - sqrtDelta));
+        if (ud * ud + uy * uy != arrowVelocity * arrowVelocity) {
+            LOGGER.warn(String.format("%f != 9", ud * ud + uy * uy));
+        }
+        */
+
         Vec3 p3 = new Vec3(px, py, pz).normalize().scale(arrowVelocity);
-        double n = Math.sqrt(p3.x * p3.x + p3.z * p3.z) * (1.0D + d / 600); // Approximation of horizontal velocity
-        double s = pd * 0.08D * 0.5D / n;
+        double ud = Math.sqrt(p3.x * p3.x + p3.z * p3.z) * (1.0D + d / 500); // Approximation of horizontal velocity
+        double uy = pd * 0.04D / ud;
+
         double vy;
 
-        if (pd == 0.0D) {
+        // Project the result on the 3D space using trigonometry hacks
+        if (pd == 0.0D || ud == 0.0D) {
             vy = 0.0D;
         } else {
             double alpha = Math.atan(py / pd); // yaw of my predicted vector
-            double beta = Math.atan(s / Math.sqrt(p3.y * p3.y + n * n)); // additional yaw of the shot
+            double beta = Math.atan(uy / ud); // additional yaw of the shot
             vy = pd * Math.tan(alpha + beta); // get that tangent since I can't normalize the x and z coords
         }
 
-
+        LOGGER.info(String.format("%f", vy));
         abstractArrow.shoot(px, vy, pz, (float) arrowVelocity, 0.0F);
 
         this.playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
