@@ -23,11 +23,8 @@ public abstract class OverlayTextureMixin {
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    public void modifyHitColor(CallbackInfo ci) {
-        this.reloadOverlay();
-    }
+    public void oldHitColor(CallbackInfo ci) {
 
-    public void reloadOverlay() {
         NativeImage nativeImage = this.texture.getPixels();
 
         for (int i = 0; i < 16; ++i) {
@@ -44,5 +41,7 @@ public abstract class OverlayTextureMixin {
         nativeImage.upload(0, 0, 0, 0, 0, nativeImage.getWidth(), nativeImage.getHeight(), false, true, false, false);
         RenderSystem.activeTexture(33984);
     }
+
+
 }
 

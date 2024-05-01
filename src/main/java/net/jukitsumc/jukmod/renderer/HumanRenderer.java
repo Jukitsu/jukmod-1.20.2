@@ -16,8 +16,6 @@ import net.minecraft.resources.ResourceLocation;
 
 public class HumanRenderer extends HumanoidMobRenderer<Human, HumanModel> {
 
-
-
     public HumanRenderer(EntityRendererProvider.Context context) {
         super(context, new HumanModel(context.bakeLayer(HumanModel.LAYER_LOCATION)), 0.5f);
         this.addLayer(new HumanoidArmorLayer(this,

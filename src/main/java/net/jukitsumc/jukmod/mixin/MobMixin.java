@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Mob.class)
 public abstract class MobMixin extends LivingEntity {
@@ -45,8 +46,8 @@ public abstract class MobMixin extends LivingEntity {
         }
     }
 
-    @Overwrite
-    public float tickHeadTurn(float f, float g) {
+    @Inject(method="tickHeadTurn", at=@At("TAIL"), cancellable = true)
+    public void tickHeadTurn(float f, float g, CallbackInfoReturnable ci) {
         float h = Mth.wrapDegrees(f - this.yBodyRot);
         this.yBodyRot += h * 0.3F;
         float i = Mth.wrapDegrees(this.yHeadRot - this.yBodyRot);
@@ -59,10 +60,6 @@ public abstract class MobMixin extends LivingEntity {
             g *= -1.0F;
         }
 
-
-        this.bodyRotationControl.clientTick();
-
-
-        return g;
+        ci.setReturnValue(g);
     }
 }

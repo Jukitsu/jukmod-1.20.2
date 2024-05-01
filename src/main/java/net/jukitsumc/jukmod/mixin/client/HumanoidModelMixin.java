@@ -36,6 +36,10 @@ public abstract class HumanoidModelMixin<T extends LivingEntity> extends Ageable
     @Shadow
     protected abstract ModelPart getArm(HumanoidArm humanoidArm);
 
+    /**
+     * @author Jukitsu
+     * @reason This is the given fix on the bug tracker. A more proper fix will be implemented later.
+     */
     @Overwrite
     public void setupAttackAnimation(T livingEntity, float f) {
         if (!(this.attackTime <= 0.0F)) {
