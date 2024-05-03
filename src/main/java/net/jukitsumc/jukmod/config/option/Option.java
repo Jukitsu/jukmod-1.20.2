@@ -14,7 +14,7 @@ public abstract class Option<T, U extends AbstractConfigListEntry<?>> {
     private final String id;
     private final Category category;
     private final T defaultValue;
-    private T value;
+    protected T value;
     private Supplier<U> entry;
 
     protected Option(String id, Category category, T defaultValue) {

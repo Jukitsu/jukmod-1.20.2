@@ -80,6 +80,10 @@ jar {
 	from("LICENSE") {
 		rename { "${it}_${project.base.archivesName.get()}"}
 	}
+	from "LICENSE"
+	from {
+		configurations.includeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+	}
 }
 
 // configure the maven publication

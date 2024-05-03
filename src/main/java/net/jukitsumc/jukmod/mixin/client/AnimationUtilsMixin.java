@@ -1,11 +1,13 @@
 package net.jukitsumc.jukmod.mixin.client;
 
 import net.jukitsumc.jukmod.Jukmod;
+import net.jukitsumc.jukmod.config.option.BooleanOption;
 import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -13,9 +15,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(AnimationUtils.class)
 public class AnimationUtilsMixin {
 
+    @Unique
+    private static BooleanOption oldZombieArm = Jukmod.getInstance().getConfig().animations().oldZombieArm();
+
     @Inject(method="animateZombieArms", at=@At("HEAD"), cancellable = true)
     private static void oldZombieArms(ModelPart modelPart, ModelPart modelPart2, boolean bl, float f, float g, CallbackInfo ci) {
-        if (Jukmod.getInstance().getConfig().animations().oldZombieArm().get()) {
+        if (oldZombieArm.get()) {
             float j;
             float h = Mth.sin(f * (float) Math.PI);
             float i = Mth.sin((1.0f - (1.0f - f) * (1.0f - f)) * (float) Math.PI);

@@ -2,7 +2,6 @@ package net.jukitsumc.jukmod.config.category;
 
 import net.jukitsumc.jukmod.config.ModConfig;
 import net.jukitsumc.jukmod.config.option.BooleanOption;
-import net.jukitsumc.jukmod.config.option.LongSliderOption;
 
 public class GameplayCategory extends Category {
     private final BooleanOption missTime;

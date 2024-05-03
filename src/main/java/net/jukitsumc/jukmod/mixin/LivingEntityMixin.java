@@ -22,15 +22,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class LivingEntityMixin extends Entity {
 
     @Unique
-    BooleanOption oldPlayerBackwardsOption;
+    private BooleanOption oldPlayerBackwardsOption = Jukmod.getInstance().getConfig().animations().oldPlayerBackwards();
+
+    @Unique
+    private BooleanOption oldClientMovement = Jukmod.getInstance().getConfig().entities().oldClientMovement();
 
     protected LivingEntityMixin(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
-    }
-
-    @Inject(method="<init>", at=@At("TAIL"))
-    protected void initOptions(CallbackInfo ci) {
-        this.oldPlayerBackwardsOption = Jukmod.getInstance().getConfig().animations().oldPlayerBackwards();
     }
 
     @Shadow
@@ -38,7 +36,7 @@ public abstract class LivingEntityMixin extends Entity {
 
     @ModifyExpressionValue(method="travel", at=@At(value="INVOKE", target="Lnet/minecraft/world/entity/LivingEntity;isControlledByLocalInstance()Z"))
     private boolean oldClientMovement(boolean b) {
-        return Jukmod.getInstance().getConfig().entities().oldClientMovement().get() || b;
+        return this.oldClientMovement.get() || b;
     }
 
     @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;abs(F)F"))
