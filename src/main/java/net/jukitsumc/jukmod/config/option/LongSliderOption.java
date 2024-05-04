@@ -28,7 +28,7 @@ public class LongSliderOption extends Option<Long, LongSliderEntry> {
                     .setTextGetter(value -> {
                         if (value == 0) {
                             return MutableComponent.create(
-                                    new TranslatableContents(ModConfig.GENERIC_KEYS + ".off", null, new Object[0]));
+                                    new TranslatableContents(this.getTranslationKey() + ".off", null, new Object[0]));
                         }
                         return MutableComponent.create(new PlainTextContents.LiteralContents(new DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.US))
                                 .format(value)));

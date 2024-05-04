@@ -34,6 +34,7 @@ public class ServerEntityMixin {
 
     @ModifyExpressionValue(method = "sendChanges", at = @At(value = "FIELD", target = "Lnet/minecraft/server/level/ServerEntity;updateInterval:I"))
     private int modifyUpdateInterval(int interval) {
-        return interval <= 5 || this.universalEntityUpdateInterval.get() ? (int)(long)this.entityUpdateInterval.get() : interval;
+        return (interval <= 5 || this.universalEntityUpdateInterval.get()) && this.entityUpdateInterval.get() > 0 ?
+                (int)(long)this.entityUpdateInterval.get() : interval;
     }
 }

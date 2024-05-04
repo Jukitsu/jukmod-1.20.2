@@ -30,6 +30,8 @@ public class ClientPacketListenerMixin {
                                             float g, float h,
                                             int three) {
         int lerpSteps = (int)(long)this.entityLerpSteps.get();
+        if (lerpSteps <= 0)
+            lerpSteps = entity.getType().updateInterval();
         entity.lerpTo(x, y, z, g, h, lerpSteps);
 
     }
@@ -37,7 +39,9 @@ public class ClientPacketListenerMixin {
     @Redirect(method = "handleRotateMob", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/Entity;lerpHeadTo(FI)V"))
     private void properlyLerpEntityRotation(Entity entity, float yRot, int three) {
-        int lerpSteps = (int)(long)this.entityLerpSteps.get();;
+        int lerpSteps = (int)(long)this.entityLerpSteps.get();
+        if (lerpSteps <= 0)
+            lerpSteps = entity.getType().updateInterval();
         entity.lerpHeadTo(yRot, lerpSteps);
     }
 }

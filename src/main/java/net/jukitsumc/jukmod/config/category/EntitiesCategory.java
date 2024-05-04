@@ -15,8 +15,8 @@ public class EntitiesCategory extends Category {
     public EntitiesCategory(ModConfig modConfig) {
         super(modConfig);
         oldClientMovement = this.register(new BooleanOption("oldClientMovement", this, true));
-        entityLerpSteps = this.register(new LongSliderOption("entityLerpSteps", this, (long)3, 1, 6));
-        entityUpdateInterval = this.register(new LongSliderOption("entityUpdateInterval", this, (long)1, 1, 6));
+        entityLerpSteps = this.register(new LongSliderOption("entityLerpSteps", this, (long)0, 0, 6));
+        entityUpdateInterval = this.register(new LongSliderOption("entityUpdateInterval", this, (long)1, 0, 6));
         lerpPlayerVelocity = this.register(new BooleanOption("lerpPlayerVelocity", this, false));
         remotePlayerPhysics = this.register(new BooleanOption("remotePlayerPhysics", this, false));
         universalEntityUpdateInterval = this.register(new BooleanOption("universalEntityUpdateInterval", this, false));
