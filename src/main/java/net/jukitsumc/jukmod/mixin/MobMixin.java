@@ -31,7 +31,12 @@ public abstract class MobMixin extends LivingEntity {
     @Final
     private BodyRotationControl bodyRotationControl;
     @Unique
-    private BooleanOption oldBackwardsOption = Jukmod.getInstance().getConfig().animations().oldBackwards();
+    private BooleanOption oldBackwardsOption;
+
+    @Inject(method="<init>", at=@At("TAIL"))
+    private void initialize(CallbackInfo ci) {
+        oldBackwardsOption = Jukmod.getInstance().getConfig().animations().oldBackwards();
+    }
 
     protected MobMixin(EntityType<? extends Mob> entityType, Level level) {
         super(entityType, level);

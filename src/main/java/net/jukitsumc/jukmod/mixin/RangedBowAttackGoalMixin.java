@@ -20,6 +20,9 @@ public class RangedBowAttackGoalMixin<T extends Monster & RangedAttackMob> {
     @Inject(method = "tick", at = @At("TAIL"))
     public void fixSkeletonStrafing(CallbackInfo info) {
         LivingEntity livingEntity = this.mob.getTarget();
-        this.mob.getLookControl().setLookAt(livingEntity, 30.0F, 30.0F);
+        if (livingEntity != null)
+            this.mob.getLookControl().setLookAt(livingEntity, 30.0F, 30.0F);
     }
+
+
 }

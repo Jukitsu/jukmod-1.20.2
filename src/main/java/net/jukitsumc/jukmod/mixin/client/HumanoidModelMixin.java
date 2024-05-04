@@ -1,15 +1,18 @@
 package net.jukitsumc.jukmod.mixin.client;
 
+import net.jukitsumc.jukmod.Jukmod;
+import net.jukitsumc.jukmod.config.option.BooleanOption;
 import net.minecraft.client.model.AgeableListModel;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.apache.commons.compress.harmony.pack200.NewAttributeBands;
+import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(HumanoidModel.class)
 public abstract class HumanoidModelMixin<T extends LivingEntity> extends AgeableListModel<T> {
@@ -36,13 +39,23 @@ public abstract class HumanoidModelMixin<T extends LivingEntity> extends Ageable
     @Shadow
     protected abstract ModelPart getArm(HumanoidArm humanoidArm);
 
-    /**
-     * @author Jukitsu
-     * @reason This is the given fix on the bug tracker. A more proper fix will be implemented later.
-     */
-    @Overwrite
-    public void setupAttackAnimation(T livingEntity, float f) {
-        if (!(this.attackTime <= 0.0F)) {
+    @Unique
+    private BooleanOption fixLeftHand;
+
+    @Inject(method="<init>(Lnet/minecraft/client/model/geom/ModelPart;)V", at=@At("TAIL"))
+    private void initialize(CallbackInfo ci) {
+        fixLeftHand = Jukmod.getInstance().getConfig().animations().fixLeftHand();
+    }
+
+    @Inject(method="<init>(Lnet/minecraft/client/model/geom/ModelPart;Ljava/util/function/Function;)V", at=@At("TAIL"))
+    private void initializeForOtherModels(CallbackInfo ci) {
+        fixLeftHand = Jukmod.getInstance().getConfig().animations().fixLeftHand();
+    }
+
+
+    @Inject(method="setupAttackAnimation", at=@At("HEAD"), cancellable = true)
+    public void onSetupAttackAnimation(T livingEntity, float f, CallbackInfo ci) {
+        if (!(this.attackTime <= 0.0F) && fixLeftHand.get()) {
             HumanoidArm humanoidArm = this.getAttackArm(livingEntity);
             ModelPart modelPart = this.getArm(humanoidArm);
             float g = this.attackTime;
@@ -78,6 +91,7 @@ public abstract class HumanoidModelMixin<T extends LivingEntity> extends Ageable
             } else {
                 modelPart.zRot -= Mth.sin(this.attackTime * (float) Math.PI) * 0.4F;
             }
+            ci.cancel();
         }
     }
 }

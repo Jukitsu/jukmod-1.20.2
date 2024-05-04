@@ -10,6 +10,7 @@ public class AnimationsCategory extends Category {
     private final BooleanOption deathWalk;
     private final BooleanOption oldPlayerBackwards;
     private final BooleanOption oldBackwards;
+    private final BooleanOption fixLeftHand;
 
     public AnimationsCategory(ModConfig modConfig) {
         super(modConfig);
@@ -19,6 +20,7 @@ public class AnimationsCategory extends Category {
         deathWalk = this.register(new BooleanOption("deathWalk", this, true));
         oldPlayerBackwards = this.register(new BooleanOption("oldPlayerBackwards", this, true));
         oldBackwards = this.register(new BooleanOption("oldBackwards", this, true));
+        fixLeftHand = this.register(new BooleanOption("fixLeftHand", this, true));
     }
 
     @Override
@@ -49,4 +51,6 @@ public class AnimationsCategory extends Category {
     public BooleanOption oldBackwards() {
         return oldBackwards;
     }
+
+    public BooleanOption fixLeftHand() { return fixLeftHand; }
 }

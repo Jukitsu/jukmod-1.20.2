@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(MultiPlayerGameMode.class)
@@ -20,11 +21,13 @@ public class MultiPlayerGameModeMixin {
     private GameType localPlayerMode;
 
     @Unique
-    private BooleanOption missTime = Jukmod.getInstance().getConfig().gameplay().missTime();
-    /**
-     * @author Jukitsu
-     * @reason For PVP
-     */
+    private BooleanOption missTime;
+
+    @Inject(method="<init>", at=@At("TAIL"))
+    private void initialize(CallbackInfo ci) {
+        missTime = Jukmod.getInstance().getConfig().gameplay().missTime();
+    }
+
     @Inject(method="hasMissTime", at=@At("HEAD"), cancellable = true)
     public void hasMissTime(CallbackInfoReturnable cir) {
         cir.setReturnValue(missTime.get() && !this.localPlayerMode.isCreative());

@@ -22,10 +22,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class LivingEntityMixin extends Entity {
 
     @Unique
-    private BooleanOption oldPlayerBackwardsOption = Jukmod.getInstance().getConfig().animations().oldPlayerBackwards();
+    private BooleanOption oldPlayerBackwardsOption;
 
     @Unique
-    private BooleanOption oldClientMovement = Jukmod.getInstance().getConfig().entities().oldClientMovement();
+    private BooleanOption oldClientMovement;
+
+    @Inject(method="<init>", at=@At("TAIL"))
+    private void initialize(CallbackInfo ci) {
+        oldPlayerBackwardsOption = Jukmod.getInstance().getConfig().animations().oldPlayerBackwards();
+        oldClientMovement = Jukmod.getInstance().getConfig().entities().oldClientMovement();
+    }
 
     protected LivingEntityMixin(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
@@ -35,7 +41,7 @@ public abstract class LivingEntityMixin extends Entity {
     public abstract void knockback(double d, double e, double f);
 
     @ModifyExpressionValue(method="travel", at=@At(value="INVOKE", target="Lnet/minecraft/world/entity/LivingEntity;isControlledByLocalInstance()Z"))
-    private boolean oldClientMovement(boolean b) {
+    private boolean addOldClientMovement(boolean b) {
         return this.oldClientMovement.get() || b;
     }
 
@@ -43,6 +49,8 @@ public abstract class LivingEntityMixin extends Entity {
     private float forceOldBackwardsAnimations(float f) {
         return this.oldPlayerBackwardsOption.get() ? 0.0F : f;
     }
+
+
 
     /**
      * @author Jukitsu

@@ -20,10 +20,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(RemotePlayer.class)
 public class RemotePlayerMixin extends AbstractClientPlayer {
 
-    @Unique private BooleanOption lerpPlayerVelocity = Jukmod.getInstance().getConfig().entities().lerpPlayerVelocity();
-    @Unique private BooleanOption remotePlayerPhysics = Jukmod.getInstance().getConfig().entities().remotePlayerPhysics();
+    @Unique private BooleanOption lerpPlayerVelocity;
+    @Unique private BooleanOption remotePlayerPhysics;
     public RemotePlayerMixin(ClientLevel clientLevel, GameProfile gameProfile) {
         super(clientLevel, gameProfile);
+    }
+
+    @Inject(method="<init>", at=@At("TAIL"))
+    private void initialize(CallbackInfo ci) {
+        lerpPlayerVelocity = Jukmod.getInstance().getConfig().entities().lerpPlayerVelocity();
+        remotePlayerPhysics = Jukmod.getInstance().getConfig().entities().remotePlayerPhysics();
     }
 
     /**

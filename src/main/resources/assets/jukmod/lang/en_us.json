@@ -36,7 +36,9 @@
   "options.jukmod.entities.lerpPlayerVelocity.tooltip.0" : "A debug option to test whether it affects Combat.",
   "options.jukmod.entities.lerpPlayerVelocity.tooltip.1" : "This behavior is disabled in 1.8.",
   "options.jukmod.entities.remotePlayerPhysics" : "Client Remote Player Physics",
-  "options.jukmod.entities.remotePlayerPhysics.tooltip.0" : "Cool stuff I guess",
+  "options.jukmod.entities.remotePlayerPhysics.tooltip.0" : "Brings back client-side remote player physics, looks funi",
+  "options.jukmod.entities.universalEntityUpdateInterval" : "Universal Entity Update Interval",
+  "options.jukmod.entities.universalEntityUpdateInterval.tooltip.0" : "Applies the Server Update Interval to all entities",
 
   "options.jukmod.gameplay.missTime" : "Miss Cooldown",
   "options.jukmod.gameplay.missTime.tooltip.0" : "Determines whether to enable",

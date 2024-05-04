@@ -18,6 +18,11 @@ public class AnimationUtilsMixin {
     @Unique
     private static BooleanOption oldZombieArm = Jukmod.getInstance().getConfig().animations().oldZombieArm();
 
+    @Inject(method="<init>", at=@At("TAIL"))
+    private void initialize(CallbackInfo ci) {
+        oldZombieArm = Jukmod.getInstance().getConfig().animations().oldZombieArm();
+    }
+
     @Inject(method="animateZombieArms", at=@At("HEAD"), cancellable = true)
     private static void oldZombieArms(ModelPart modelPart, ModelPart modelPart2, boolean bl, float f, float g, CallbackInfo ci) {
         if (oldZombieArm.get()) {

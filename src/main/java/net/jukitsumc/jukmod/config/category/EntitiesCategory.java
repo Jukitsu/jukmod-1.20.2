@@ -10,6 +10,7 @@ public class EntitiesCategory extends Category {
     private final LongSliderOption entityUpdateInterval;
     private final BooleanOption lerpPlayerVelocity;
     private final BooleanOption remotePlayerPhysics;
+    private final BooleanOption universalEntityUpdateInterval;
 
     public EntitiesCategory(ModConfig modConfig) {
         super(modConfig);
@@ -18,6 +19,7 @@ public class EntitiesCategory extends Category {
         entityUpdateInterval = this.register(new LongSliderOption("entityUpdateInterval", this, (long)1, 1, 6));
         lerpPlayerVelocity = this.register(new BooleanOption("lerpPlayerVelocity", this, false));
         remotePlayerPhysics = this.register(new BooleanOption("remotePlayerPhysics", this, false));
+        universalEntityUpdateInterval = this.register(new BooleanOption("universalEntityUpdateInterval", this, false));
     }
 
     @Override
@@ -26,23 +28,25 @@ public class EntitiesCategory extends Category {
     }
 
     public BooleanOption oldClientMovement() {
-        return oldClientMovement;
+        return this.oldClientMovement;
     }
 
     public LongSliderOption entityLerpSteps() {
-        return entityLerpSteps;
+        return this.entityLerpSteps;
     }
 
-    public LongSliderOption entityUpdateInterval() {
-        return entityUpdateInterval;
-    }
+    public LongSliderOption entityUpdateInterval() { return this.entityUpdateInterval; }
 
     public BooleanOption lerpPlayerVelocity() {
-        return lerpPlayerVelocity;
+        return this.lerpPlayerVelocity;
     }
 
     public BooleanOption remotePlayerPhysics() {
-        return remotePlayerPhysics;
+        return this.remotePlayerPhysics;
+    }
+
+    public BooleanOption universalEntityUpdateInterval() {
+        return this.universalEntityUpdateInterval;
     }
 
 }

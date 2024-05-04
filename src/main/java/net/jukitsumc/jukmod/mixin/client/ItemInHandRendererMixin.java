@@ -19,7 +19,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ItemInHandRendererMixin {
 
     @Unique
-    private BooleanOption oldSwing = Jukmod.getInstance().getConfig().animations().oldSwing();
+    private BooleanOption oldSwing;
+
+    @Inject(method="<init>", at=@At("TAIL"))
+    private void initialize(CallbackInfo ci) {
+        oldSwing = Jukmod.getInstance().getConfig().animations().oldSwing();
+    }
 
     @Inject(
             method = "applyItemArmAttackTransform",
