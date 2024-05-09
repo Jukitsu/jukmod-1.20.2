@@ -15,6 +15,7 @@ import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -51,6 +52,8 @@ public abstract class MobMixin extends LivingEntity {
             this.targetSelector.addGoal(2, new NearestAttackableTargetGoal((Mob) (Object) this, Human.class, true));
         }
     }
+
+
 
     @Inject(method="tickHeadTurn", at=@At("TAIL"), cancellable = true)
     public void tickHeadTurn(float f, float g, CallbackInfoReturnable ci) {

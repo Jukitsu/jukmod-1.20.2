@@ -11,6 +11,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,6 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
+
 
     @Unique
     private BooleanOption oldPlayerBackwardsOption;
@@ -40,6 +43,7 @@ public abstract class LivingEntityMixin extends Entity {
     @Shadow
     public abstract void knockback(double d, double e, double f);
 
+
     @ModifyExpressionValue(method="travel", at=@At(value="INVOKE", target="Lnet/minecraft/world/entity/LivingEntity;isControlledByLocalInstance()Z"))
     private boolean addOldClientMovement(boolean b) {
         return this.oldClientMovement.get() || b;
@@ -49,7 +53,6 @@ public abstract class LivingEntityMixin extends Entity {
     private float forceOldBackwardsAnimations(float f) {
         return this.oldPlayerBackwardsOption.get() ? 0.0F : f;
     }
-
 
 
     /**

@@ -266,8 +266,6 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
         double vx = vd * Math.cos(alpha);
         double vz = vd * Math.sin(alpha);
 
-
-        LOGGER.info(String.format("%f, %f", vd, vy));
         abstractArrow.shoot(vx, vy, vz, (float) arrowVelocity, 0.0F);
         abstractArrow.setCritArrow(true);
 
@@ -470,12 +468,11 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
             this.magicCrit(entity);
         }
 
-
         boolean bl = entity.hurt(this.damageSources().mobAttack(this), damage);
-        if (bl) {
+        if (bl && entity instanceof LivingEntity) {
             this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_STRONG, this.getSoundSource(), 1.0F, 1.0F);
 
-            if (knockback > 0.0F && entity instanceof LivingEntity) {
+            if (knockback > 0.0F) {
                 this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, this.getSoundSource(), 1.0F, 1.0F);
                 ((LivingEntity) entity).knockback(knockback * 0.5F, Mth.sin(this.getYRot() * 0.017453292F), -Mth.cos(this.getYRot() * 0.017453292F));
                 this.setDeltaMovement(this.getDeltaMovement().multiply(0.6D, 1.0D, 0.6D));
