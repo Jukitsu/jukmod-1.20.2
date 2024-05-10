@@ -9,7 +9,8 @@
 		"RangedBowAttackGoalMixin",
 		"SwellGoalMixin",
 		"PathfinderMobMixin",
-		"ServerEntityMixin"
+		"ServerEntityMixin",
+		"EnderDragonMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

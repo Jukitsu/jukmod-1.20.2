@@ -1,5 +1,6 @@
 package net.jukitsumc.jukmod;
 
+import com.mojang.logging.LogUtils;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import net.jukitsumc.jukmod.renderer.HumanRenderer;
 import net.jukitsumc.jukmod.renderer.HumanModel;
 import net.jukitsumc.jukmod.config.ModConfig;
+import org.slf4j.event.Level;
 
 import java.nio.file.Path;
 

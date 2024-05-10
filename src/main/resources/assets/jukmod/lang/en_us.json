@@ -44,5 +44,9 @@
   "options.jukmod.gameplay.missTime" : "Miss Cooldown",
   "options.jukmod.gameplay.missTime.tooltip.0" : "Determines whether to enable",
   "options.jukmod.gameplay.missTime.tooltip.1" : "the 10-tick missing penalty",
-  "options.jukmod.gameplay.missTime.tooltip.2" : "Disable for \"1.7 hitreg\""
+  "options.jukmod.gameplay.missTime.tooltip.2" : "Disable for \"1.7 hitreg\"",
+  "options.jukmod.gameplay.dragonMovement" : "Fix Ender Dragon Movement",
+  "options.jukmod.gameplay.dragonMovement.tooltip.0" : "Fixes Dragon AI issues due to improper velocity",
+  "options.jukmod.gameplay.dragonMovement.tooltip.1" : "Makes dragon fights more dynamic !"
+
 }
