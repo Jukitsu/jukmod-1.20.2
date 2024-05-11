@@ -47,6 +47,10 @@
   "options.jukmod.gameplay.missTime.tooltip.2" : "Disable for \"1.7 hitreg\"",
   "options.jukmod.gameplay.dragonMovement" : "Fix Ender Dragon Movement",
   "options.jukmod.gameplay.dragonMovement.tooltip.0" : "Fixes Dragon AI issues due to improper velocity",
-  "options.jukmod.gameplay.dragonMovement.tooltip.1" : "Makes dragon fights more dynamic !"
-
+  "options.jukmod.gameplay.dragonMovement.tooltip.1" : "Makes dragon fights more dynamic !",
+  "options.jukmod.gameplay.knockbackType" : "Custom Knockback Type",
+  "options.jukmod.gameplay.knockbackType.tooltip.0" : "You can bring back Kohi knockback !",
+  "options.jukmod.gameplay.knockbackType.off": "Kohi",
+  "options.jukmod.gameplay.knockbackType.negative": "1.8 Vanilla",
+  "options.jukmod.gameplay.knockbackType.negative2": "1.9+ Vanilla"
 }

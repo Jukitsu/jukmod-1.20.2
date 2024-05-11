@@ -29,6 +29,13 @@ public class LongSliderOption extends Option<Long, LongSliderEntry> {
                         if (value == 0) {
                             return MutableComponent.create(
                                     new TranslatableContents(this.getTranslationKey() + ".off", null, new Object[0]));
+                        } else if (value == -1) {
+                            return MutableComponent.create(
+                                    new TranslatableContents(this.getTranslationKey() + ".negative", null, new Object[0]));
+                        }
+                        else if (value == -2) {
+                            return MutableComponent.create(
+                                    new TranslatableContents(this.getTranslationKey() + ".negative2", null, new Object[0]));
                         }
                         return MutableComponent.create(new PlainTextContents.LiteralContents(new DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.US))
                                 .format(value)));
