@@ -10,8 +10,7 @@
 		"SwellGoalMixin",
 		"PathfinderMobMixin",
 		"ServerEntityMixin",
-		"EnderDragonMixin",
-		"PlayerMixin"
+		"EnderDragonMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
