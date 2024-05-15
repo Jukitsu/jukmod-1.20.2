@@ -1,23 +1,18 @@
 package net.jukitsumc.jukmod.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.jukitsumc.jukmod.Jukmod;
 import net.jukitsumc.jukmod.config.option.BooleanOption;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.BooleanOp;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntity.class)
@@ -30,21 +25,21 @@ public abstract class LivingEntityMixin extends Entity {
     @Unique
     private BooleanOption oldClientMovement;
 
-    @Inject(method="<init>", at=@At("TAIL"))
+    protected LivingEntityMixin(EntityType<? extends LivingEntity> entityType, Level level) {
+        super(entityType, level);
+    }
+
+    @Inject(method = "<init>", at = @At("TAIL"))
     private void initialize(CallbackInfo ci) {
         oldPlayerBackwardsOption = Jukmod.getInstance().getConfig().animations().oldPlayerBackwards();
         oldClientMovement = Jukmod.getInstance().getConfig().entities().oldClientMovement();
-    }
-
-    protected LivingEntityMixin(EntityType<? extends LivingEntity> entityType, Level level) {
-        super(entityType, level);
     }
 
     @Shadow
     public abstract void knockback(double d, double e, double f);
 
 
-    @ModifyExpressionValue(method="travel", at=@At(value="INVOKE", target="Lnet/minecraft/world/entity/LivingEntity;isControlledByLocalInstance()Z"))
+    @ModifyExpressionValue(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;isControlledByLocalInstance()Z"))
     private boolean addOldClientMovement(boolean b) {
         return this.oldClientMovement.get() || b;
     }
@@ -63,7 +58,6 @@ public abstract class LivingEntityMixin extends Entity {
     public void blockedByShield(LivingEntity livingEntity) {
         this.knockback(0.5, livingEntity.getX() - this.getX(), livingEntity.getZ() - this.getZ());
     }
-
 
 
 }

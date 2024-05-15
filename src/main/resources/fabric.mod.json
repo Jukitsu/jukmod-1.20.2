@@ -1,5 +1,6 @@
 {
 	"schemaVersion": 1,
+	"accessWidener": "jukmod.accesswidener",
 	"id": "jukmod",
 	"version": "${version}",
 	"name": "Jukmod",
@@ -17,6 +18,9 @@
 	"entrypoints": {
 		"main": [
 			"net.jukitsumc.jukmod.Jukmod"
+		],
+		"client": [
+			"net.jukitsumc.jukmod.client.JukmodClient"
 		],
 		"modmenu": [
 			"net.jukitsumc.jukmod.implementation.ModMenuApiImpl"

@@ -3,6 +3,10 @@ plugins {
 	id 'maven-publish'
 }
 
+loom {
+	accessWidener.set(file("src/main/resources/jukmod.accesswidener"))
+}
+
 version = project.mod_version
 group = project.maven_group
 
@@ -54,12 +58,15 @@ dependencies {
 	// modImplementation "net.fabricmc.fabric-api:fabric-api-deprecated:${project.fabric_version}"
 }
 
+
 processResources {
 	inputs.property "version", project.version
 
 	filesMatching("fabric.mod.json") {
 		expand "version": project.version
 	}
+
+
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -102,3 +109,4 @@ publishing {
 		// retrieving dependencies.
 	}
 }
+

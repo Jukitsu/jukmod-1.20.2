@@ -474,7 +474,8 @@ public class Human extends PathfinderMob implements NeutralMob, Npc, InventoryCa
 
             if (knockback > 0.0F) {
                 this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, this.getSoundSource(), 1.0F, 1.0F);
-                ((LivingEntity) entity).knockback(knockback * 0.5F, Mth.sin(this.getYRot() * 0.017453292F), -Mth.cos(this.getYRot() * 0.017453292F));
+                entity.push(-Mth.sin(this.getYRot() * 0.017453292F) * knockback * 0.5F, 0.1D, Mth.cos(this.getYRot() * 0.017453292F) * knockback * 0.5F);
+
                 this.setDeltaMovement(this.getDeltaMovement().multiply(0.6D, 1.0D, 0.6D));
                 this.setSprinting(false);
             }

@@ -10,7 +10,10 @@
 		"SwellGoalMixin",
 		"PathfinderMobMixin",
 		"ServerEntityMixin",
-		"EnderDragonMixin"
+		"EnderDragonMixin",
+		"MoveControlMixin",
+		"MeleeAttackGoalMixin",
+		"LeapAtTargetGoalMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

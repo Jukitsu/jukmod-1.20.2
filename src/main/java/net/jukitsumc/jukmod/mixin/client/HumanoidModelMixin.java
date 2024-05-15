@@ -8,8 +8,10 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
-import org.apache.commons.compress.harmony.pack200.NewAttributeBands;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -32,6 +34,8 @@ public abstract class HumanoidModelMixin<T extends LivingEntity> extends Ageable
     @Shadow
     @Final
     public ModelPart leftArm;
+    @Unique
+    private BooleanOption fixLeftHand;
 
     @Shadow
     protected abstract HumanoidArm getAttackArm(T livingEntity);
@@ -39,21 +43,18 @@ public abstract class HumanoidModelMixin<T extends LivingEntity> extends Ageable
     @Shadow
     protected abstract ModelPart getArm(HumanoidArm humanoidArm);
 
-    @Unique
-    private BooleanOption fixLeftHand;
-
-    @Inject(method="<init>(Lnet/minecraft/client/model/geom/ModelPart;)V", at=@At("TAIL"))
+    @Inject(method = "<init>(Lnet/minecraft/client/model/geom/ModelPart;)V", at = @At("TAIL"))
     private void initialize(CallbackInfo ci) {
         fixLeftHand = Jukmod.getInstance().getConfig().animations().fixLeftHand();
     }
 
-    @Inject(method="<init>(Lnet/minecraft/client/model/geom/ModelPart;Ljava/util/function/Function;)V", at=@At("TAIL"))
+    @Inject(method = "<init>(Lnet/minecraft/client/model/geom/ModelPart;Ljava/util/function/Function;)V", at = @At("TAIL"))
     private void initializeForOtherModels(CallbackInfo ci) {
         fixLeftHand = Jukmod.getInstance().getConfig().animations().fixLeftHand();
     }
 
 
-    @Inject(method="setupAttackAnimation", at=@At("HEAD"), cancellable = true)
+    @Inject(method = "setupAttackAnimation", at = @At("HEAD"), cancellable = true)
     public void onSetupAttackAnimation(T livingEntity, float f, CallbackInfo ci) {
         if (!(this.attackTime <= 0.0F) && fixLeftHand.get()) {
             HumanoidArm humanoidArm = this.getAttackArm(livingEntity);

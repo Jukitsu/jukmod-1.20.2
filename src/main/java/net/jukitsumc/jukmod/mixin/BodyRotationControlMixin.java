@@ -5,7 +5,6 @@ import net.jukitsumc.jukmod.Jukmod;
 import net.jukitsumc.jukmod.config.option.BooleanOption;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.control.BodyRotationControl;
-import net.minecraft.world.phys.shapes.BooleanOp;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,13 +21,19 @@ public abstract class BodyRotationControlMixin {
     @Shadow
     @Final
     private Mob mob;
-
-    @Shadow protected abstract void rotateHeadIfNecessary();
-
     @Unique
     private BooleanOption oldBackwards;
 
-    @Inject(method="<init>", at=@At("TAIL"))
+    @Shadow
+    protected abstract void rotateHeadIfNecessary();
+
+    @Shadow
+    protected abstract void rotateBodyIfNecessary();
+
+    @Shadow
+    protected abstract void rotateHeadTowardsFront();
+
+    @Inject(method = "<init>", at = @At("TAIL"))
     private void initialize(CallbackInfo ci) {
         oldBackwards = Jukmod.getInstance().getConfig().animations().oldBackwards();
     }
@@ -40,7 +45,7 @@ public abstract class BodyRotationControlMixin {
 
     @Redirect(method = "clientTick", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/ai/control/BodyRotationControl;rotateHeadIfNecessary()V"))
-    public void clientTick(BodyRotationControl instance) {
+    public void noRotateHead(BodyRotationControl instance) {
         if (!oldBackwards.get()) {
             this.rotateHeadIfNecessary();
         }

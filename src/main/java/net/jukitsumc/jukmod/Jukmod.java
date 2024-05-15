@@ -1,12 +1,10 @@
 package net.jukitsumc.jukmod;
 
-import com.mojang.logging.LogUtils;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
@@ -23,14 +21,12 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
-import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import net.jukitsumc.jukmod.renderer.HumanRenderer;
-import net.jukitsumc.jukmod.renderer.HumanModel;
+import net.jukitsumc.jukmod.client.renderer.HumanRenderer;
+import net.jukitsumc.jukmod.client.renderer.HumanModel;
 import net.jukitsumc.jukmod.config.ModConfig;
-import org.slf4j.event.Level;
 
 import java.nio.file.Path;
 
@@ -67,8 +63,6 @@ public class Jukmod implements ModInitializer {
         LOGGER.info("0.24 (\"1.8\") Miss Penalty Removed ! :D");
         LOGGER.info("Old hit color initialized, old corpse animation loading...");
         LOGGER.info("Fixed MC-69655, MC-120955 and MC-147694");
-        JukmodHUD jukmodHUD = new JukmodHUD();
-        HudRenderCallback.EVENT.register(jukmodHUD);
 
         FabricLoader loader = FabricLoader.getInstance();
 

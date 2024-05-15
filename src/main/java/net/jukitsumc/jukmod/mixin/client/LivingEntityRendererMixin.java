@@ -12,27 +12,25 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 
 @Mixin(LivingEntityRenderer.class)
 public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extends EntityModel<T>> extends EntityRenderer<T> {
 
+    protected M model;
     @Unique
     private BooleanOption deathWalk;
-
-    @Inject(method="<init>", at=@At("TAIL"))
-    private void initialize(CallbackInfo ci) {
-        deathWalk = Jukmod.getInstance().getConfig().animations().deathWalk();
-    }
-
-    protected M model;
 
     public LivingEntityRendererMixin(EntityRendererProvider.Context context, M entityModel, float f) {
         super(context);
         this.model = entityModel;
         this.shadowRadius = f;
+    }
+
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void initialize(CallbackInfo ci) {
+        deathWalk = Jukmod.getInstance().getConfig().animations().deathWalk();
     }
 
     @ModifyExpressionValue(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;isAlive()Z"))

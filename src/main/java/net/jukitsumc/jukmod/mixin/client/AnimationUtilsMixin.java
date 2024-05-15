@@ -6,7 +6,6 @@ import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,12 +17,7 @@ public class AnimationUtilsMixin {
     @Unique
     private static BooleanOption oldZombieArm = Jukmod.getInstance().getConfig().animations().oldZombieArm();
 
-    @Inject(method="<init>", at=@At("TAIL"))
-    private void initialize(CallbackInfo ci) {
-        oldZombieArm = Jukmod.getInstance().getConfig().animations().oldZombieArm();
-    }
-
-    @Inject(method="animateZombieArms", at=@At("HEAD"), cancellable = true)
+    @Inject(method = "animateZombieArms", at = @At("HEAD"), cancellable = true)
     private static void oldZombieArms(ModelPart modelPart, ModelPart modelPart2, boolean bl, float f, float g, CallbackInfo ci) {
         if (oldZombieArm.get()) {
             float j;
@@ -40,5 +34,10 @@ public class AnimationUtilsMixin {
             AnimationUtils.bobArms(modelPart2, modelPart, g);
             ci.cancel();
         }
+    }
+
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void initialize(CallbackInfo ci) {
+        oldZombieArm = Jukmod.getInstance().getConfig().animations().oldZombieArm();
     }
 }

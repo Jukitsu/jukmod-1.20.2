@@ -17,13 +17,13 @@ public class IllagerModelMixin<T extends AbstractIllager> {
     @Unique
     private BooleanOption worldWar2;
 
-    @Inject(method="<init>", at=@At("TAIL"))
+    @Inject(method = "<init>", at = @At("TAIL"))
     private void initialize(CallbackInfo ci) {
         worldWar2 = Jukmod.getInstance().getConfig().animations().worldWar2();
     }
 
     @Redirect(method = "setupAnim", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z"))
     public boolean bringBackOldIllagers(ItemStack stack) {
-        return worldWar2.get();
+        return !worldWar2.get();
     }
 }

@@ -6,11 +6,8 @@ import net.jukitsumc.jukmod.config.option.BooleanOption;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.RemotePlayer;
-import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,13 +17,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(RemotePlayer.class)
 public class RemotePlayerMixin extends AbstractClientPlayer {
 
-    @Unique private BooleanOption lerpPlayerVelocity;
-    @Unique private BooleanOption remotePlayerPhysics;
+    @Unique
+    private BooleanOption lerpPlayerVelocity;
+    @Unique
+    private BooleanOption remotePlayerPhysics;
+
     public RemotePlayerMixin(ClientLevel clientLevel, GameProfile gameProfile) {
         super(clientLevel, gameProfile);
     }
 
-    @Inject(method="<init>", at=@At("TAIL"))
+    @Inject(method = "<init>", at = @At("TAIL"))
     private void initialize(CallbackInfo ci) {
         lerpPlayerVelocity = Jukmod.getInstance().getConfig().entities().lerpPlayerVelocity();
         remotePlayerPhysics = Jukmod.getInstance().getConfig().entities().remotePlayerPhysics();
@@ -36,7 +36,7 @@ public class RemotePlayerMixin extends AbstractClientPlayer {
      * @author Jukitsu
      * @reason Linear Interpolation doesn't seem to affect rendering. We'll just bring back the old behaviour.
      */
-    @Inject(method="lerpMotion", at=@At("HEAD"), cancellable = true)
+    @Inject(method = "lerpMotion", at = @At("HEAD"), cancellable = true)
     public void onLerpMotion(double d, double e, double f, CallbackInfo ci) {
         if (!this.lerpPlayerVelocity.get()) {
             this.setDeltaMovement(new Vec3(d, e, f));
@@ -44,14 +44,14 @@ public class RemotePlayerMixin extends AbstractClientPlayer {
         }
     }
 
-    @Redirect(method="tick", at=@At(value="INVOKE", target="Lnet/minecraft/client/player/RemotePlayer;calculateEntityAnimation(Z)V"))
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/RemotePlayer;calculateEntityAnimation(Z)V"))
     public void calculateEntityAnimation(RemotePlayer instance, boolean b) {
         if (!this.remotePlayerPhysics.get())
             instance.calculateEntityAnimation(b);
 
     }
 
-    @Inject(method="aiStep", at=@At(value="HEAD"), cancellable = true)
+    @Inject(method = "aiStep", at = @At(value = "HEAD"), cancellable = true)
     public void clientPlayerPhysics(CallbackInfo ci) {
         if (this.remotePlayerPhysics.get()) {
             super.aiStep();
