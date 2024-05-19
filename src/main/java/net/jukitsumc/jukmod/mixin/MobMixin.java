@@ -8,17 +8,18 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.NeutralMob;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.BodyRotationControl;
 import net.minecraft.world.entity.ai.control.JumpControl;
 import net.minecraft.world.entity.ai.control.MoveControl;
+import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
+import net.minecraft.world.entity.ai.goal.PanicGoal;
+import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -33,10 +34,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.stream.StreamSupport;
 
 @Mixin(Mob.class)
 public abstract class MobMixin extends LivingEntity {
+
     private static final Logger LOGGER = LogUtils.getLogger();
     @Shadow
     @Final
@@ -91,6 +94,7 @@ public abstract class MobMixin extends LivingEntity {
         }
     }
 
+
     private boolean isMoving() {
         return this.xxa != 0.0F || this.zza != 0.0F;
     }
@@ -129,7 +133,7 @@ public abstract class MobMixin extends LivingEntity {
         Vec3 vec34 = vec33.scale(n);
         Vec3 vec35 = this.getForward();
         l = (float) (vec35.x * vec34.x + vec35.z * vec34.z);
-        if (!(l < -0.15F)) {
+        if (l >= -0.15F) {
             CollisionContext collisionContext = CollisionContext.of(this);
             BlockPos blockPos = BlockPos.containing(this.getX(), this.getBoundingBox().maxY, this.getZ());
             BlockState blockState = this.level().getBlockState(blockPos);
@@ -142,7 +146,7 @@ public abstract class MobMixin extends LivingEntity {
                         p += (float) (this.getEffect(MobEffects.JUMP).getAmplifier() + 1) * 0.75F;
                     }
 
-                    float q = Math.max(h * 7.0F, 1.0F / n);
+                    float q = Math.max(h * 2.718281828F, 1.0F / n);
                     Vec3 vec37 = vec32.add(vec34.scale(q));
                     float r = this.getBbWidth();
                     float s = this.getBbHeight();
@@ -201,7 +205,6 @@ public abstract class MobMixin extends LivingEntity {
                     if (t != 1.4E-45F) {
                         float v = (float) ((double) t - this.getY());
                         if (v > 0.5F && v <= p) {
-                            LOGGER.info("Auto jump effective!");
                             this.autoJumpTime = 1;
                         }
                     }
@@ -210,10 +213,10 @@ public abstract class MobMixin extends LivingEntity {
         }
 
     }
-/*
+
     @Inject(method = "aiStep", at = @At(value = "HEAD"))
     private void checkAutoJump(CallbackInfo ci) {
-        if (this.autoJumpTime > 0) {
+        if (autoJumpTime > 0) {
             --this.autoJumpTime;
             this.getJumpControl().jump();
             this.getMoveControl().operation = MoveControl.Operation.JUMPING;
@@ -228,19 +231,25 @@ public abstract class MobMixin extends LivingEntity {
         super.move(moverType, vec3);
         this.updateAutoJump((float)(this.getX() - d), (float)(this.getZ() - e));
     }
-*/
+
 
     @Inject(method = "tickHeadTurn", at = @At("TAIL"), cancellable = true)
     public void tickHeadTurn(float f, float g, CallbackInfoReturnable ci) {
         if (oldBackwardsOption.get()) {
-            float h = Mth.wrapDegrees(f - this.yBodyRot);
-            this.yBodyRot += h * 0.3F;
-            float i = Mth.wrapDegrees(this.yHeadRot - this.yBodyRot);
-            if (Math.abs(i) > this.getMaxHeadYRot()) {
-                this.yBodyRot += i - (float) (Mth.sign(i) * this.getMaxHeadYRot());
+            float i = Mth.wrapDegrees(f - this.yBodyRot);
+            this.yBodyRot += i * 0.3F;
+            float j = Mth.wrapDegrees(this.yHeadRot - this.yBodyRot);
+            boolean bl = j < -90.0F || j >= 90.0F;
+            if (Mth.abs(j) > 75.0F) {
+                j = 75.0F * Mth.sign(j);
+            }
+            this.yBodyRot = this.yHeadRot - j;
+
+            if (j * j > 2500.0F)
+            {
+                this.yBodyRot += j * 0.2F;
             }
 
-            boolean bl = i < -90.0F || i >= 90.0F;
             if (bl) {
                 g *= -1.0F;
             }

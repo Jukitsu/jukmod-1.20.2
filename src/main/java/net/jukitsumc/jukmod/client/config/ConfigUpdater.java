@@ -1,6 +1,5 @@
-package net.jukitsumc.jukmod.config;
+package net.jukitsumc.jukmod.client.config;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public final class ConfigUpdater {

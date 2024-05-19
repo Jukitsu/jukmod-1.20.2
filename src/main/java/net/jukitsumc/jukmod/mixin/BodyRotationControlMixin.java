@@ -43,6 +43,14 @@ public abstract class BodyRotationControlMixin {
         return oldBackwards.get() ? mob.yBodyRot : yRot;
     }
 
+    @Redirect(method = "clientTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ai/control/BodyRotationControl;rotateHeadTowardsFront()V"))
+    public void modifyClientTick(BodyRotationControl instance) {
+        if (oldBackwards.get())
+            rotateBodyIfNecessary();
+        else
+            rotateHeadTowardsFront();
+    }
+
     @Redirect(method = "clientTick", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/entity/ai/control/BodyRotationControl;rotateHeadIfNecessary()V"))
     public void noRotateHead(BodyRotationControl instance) {

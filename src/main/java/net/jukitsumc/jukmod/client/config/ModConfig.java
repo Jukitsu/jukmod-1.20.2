@@ -1,10 +1,10 @@
-package net.jukitsumc.jukmod.config;
+package net.jukitsumc.jukmod.client.config;
 
 import com.moandjiezana.toml.Toml;
 import com.moandjiezana.toml.TomlWriter;
 import net.jukitsumc.jukmod.Jukmod;
-import net.jukitsumc.jukmod.config.category.AnimationsCategory;
-import net.jukitsumc.jukmod.config.category.Category;
+import net.jukitsumc.jukmod.client.config.impl.category.AnimationsCategory;
+import net.jukitsumc.jukmod.client.config.impl.category.Category;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,8 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import net.jukitsumc.jukmod.config.category.EntitiesCategory;
-import net.jukitsumc.jukmod.config.category.GameplayCategory;
+import net.jukitsumc.jukmod.client.config.impl.category.EntitiesCategory;
+import net.jukitsumc.jukmod.client.config.impl.category.GameplayCategory;
 import org.slf4j.Logger;
 
 public class ModConfig {

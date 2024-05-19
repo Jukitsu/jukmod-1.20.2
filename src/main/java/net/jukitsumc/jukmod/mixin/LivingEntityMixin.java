@@ -3,6 +3,7 @@ package net.jukitsumc.jukmod.mixin;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.jukitsumc.jukmod.Jukmod;
 import net.jukitsumc.jukmod.config.option.BooleanOption;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -14,10 +15,10 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
-
 
     @Unique
     private BooleanOption oldPlayerBackwardsOption;
@@ -37,6 +38,37 @@ public abstract class LivingEntityMixin extends Entity {
 
     @Shadow
     public abstract void knockback(double d, double e, double f);
+
+    @Shadow public float yHeadRot;
+    @Shadow public float yBodyRot;
+
+    @Shadow protected abstract float getMaxHeadRotationRelativeToBody();
+
+    @Inject(method = "tickHeadTurn", at = @At("TAIL"), cancellable = true)
+    public void tickHeadTurn(float f, float g, CallbackInfoReturnable ci) {
+        if (oldPlayerBackwardsOption.get()) {
+            float i = Mth.wrapDegrees(f - this.yBodyRot);
+            this.yBodyRot += i * 0.3F;
+            float j = Mth.wrapDegrees(this.yHeadRot - this.yBodyRot);
+            boolean bl = j < -90.0F || j >= 90.0F;
+            if (Mth.abs(j) > 75.0F) {
+                j = 75.0F * Mth.sign(j);
+            }
+            this.yBodyRot = this.yHeadRot - j;
+
+            if (j * j > 2500.0F)
+            {
+                this.yBodyRot += j * 0.2F;
+            }
+
+            if (bl) {
+                g *= -1.0F;
+            }
+
+            ci.setReturnValue(g);
+        }
+
+    }
 
 
     @ModifyExpressionValue(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;isControlledByLocalInstance()Z"))

@@ -1,8 +1,10 @@
-package net.jukitsumc.jukmod.config.category;
+package net.jukitsumc.jukmod.client.config.impl.category;
 
-import net.jukitsumc.jukmod.config.ModConfig;
+import net.jukitsumc.jukmod.client.config.ModConfig;
 import net.jukitsumc.jukmod.config.option.BooleanOption;
 import net.jukitsumc.jukmod.config.option.LongSliderOption;
+import net.jukitsumc.jukmod.client.config.impl.option.BooleanOptionImpl;
+import net.jukitsumc.jukmod.client.config.impl.option.LongSliderOptionImpl;
 
 public class EntitiesCategory extends Category {
     private final BooleanOption oldClientMovement;
@@ -14,12 +16,12 @@ public class EntitiesCategory extends Category {
 
     public EntitiesCategory(ModConfig modConfig) {
         super(modConfig);
-        oldClientMovement = this.register(new BooleanOption("oldClientMovement", this, true));
-        entityLerpSteps = this.register(new LongSliderOption("entityLerpSteps", this, (long)0, 0, 6));
-        entityUpdateInterval = this.register(new LongSliderOption("entityUpdateInterval", this, (long)1, 0, 6));
-        lerpPlayerVelocity = this.register(new BooleanOption("lerpPlayerVelocity", this, false));
-        remotePlayerPhysics = this.register(new BooleanOption("remotePlayerPhysics", this, false));
-        universalEntityUpdateInterval = this.register(new BooleanOption("universalEntityUpdateInterval", this, false));
+        oldClientMovement = this.register(new BooleanOptionImpl("oldClientMovement", this, true));
+        entityLerpSteps = this.register(new LongSliderOptionImpl("entityLerpSteps", this, (long)0, 0, 6));
+        entityUpdateInterval = this.register(new LongSliderOptionImpl("entityUpdateInterval", this, (long)1, 0, 6));
+        lerpPlayerVelocity = this.register(new BooleanOptionImpl("lerpPlayerVelocity", this, false));
+        remotePlayerPhysics = this.register(new BooleanOptionImpl("remotePlayerPhysics", this, false));
+        universalEntityUpdateInterval = this.register(new BooleanOptionImpl("universalEntityUpdateInterval", this, false));
     }
 
     @Override

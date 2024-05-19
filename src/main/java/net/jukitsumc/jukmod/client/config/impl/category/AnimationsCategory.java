@@ -1,7 +1,8 @@
-package net.jukitsumc.jukmod.config.category;
+package net.jukitsumc.jukmod.client.config.impl.category;
 
-import net.jukitsumc.jukmod.config.ModConfig;
+import net.jukitsumc.jukmod.client.config.ModConfig;
 import net.jukitsumc.jukmod.config.option.BooleanOption;
+import net.jukitsumc.jukmod.client.config.impl.option.BooleanOptionImpl;
 
 public class AnimationsCategory extends Category {
     private final BooleanOption oldZombieArm;
@@ -14,13 +15,13 @@ public class AnimationsCategory extends Category {
 
     public AnimationsCategory(ModConfig modConfig) {
         super(modConfig);
-        oldZombieArm = this.register(new BooleanOption("oldZombieArm", this, true));
-        worldWar2 = this.register(new BooleanOption("worldWar2", this, true));
-        oldSwing = this.register(new BooleanOption("oldSwing", this, true));
-        deathWalk = this.register(new BooleanOption("deathWalk", this, true));
-        oldPlayerBackwards = this.register(new BooleanOption("oldPlayerBackwards", this, true));
-        oldBackwards = this.register(new BooleanOption("oldBackwards", this, true));
-        fixLeftHand = this.register(new BooleanOption("fixLeftHand", this, true));
+        oldZombieArm = this.register(new BooleanOptionImpl("oldZombieArm", this, true));
+        worldWar2 = this.register(new BooleanOptionImpl("worldWar2", this, true));
+        oldSwing = this.register(new BooleanOptionImpl("oldSwing", this, true));
+        deathWalk = this.register(new BooleanOptionImpl("deathWalk", this, true));
+        oldPlayerBackwards = this.register(new BooleanOptionImpl("oldPlayerBackwards", this, true));
+        oldBackwards = this.register(new BooleanOptionImpl("oldBackwards", this, true));
+        fixLeftHand = this.register(new BooleanOptionImpl("fixLeftHand", this, true));
     }
 
     @Override

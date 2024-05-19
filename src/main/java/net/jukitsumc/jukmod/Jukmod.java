@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.jukitsumc.jukmod.client.renderer.HumanRenderer;
 import net.jukitsumc.jukmod.client.renderer.HumanModel;
-import net.jukitsumc.jukmod.config.ModConfig;
+import net.jukitsumc.jukmod.client.config.ModConfig;
 
 import java.nio.file.Path;
 

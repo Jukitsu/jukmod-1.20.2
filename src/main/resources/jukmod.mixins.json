@@ -13,7 +13,8 @@
 		"EnderDragonMixin",
 		"MoveControlMixin",
 		"MeleeAttackGoalMixin",
-		"LeapAtTargetGoalMixin"
+		"LeapAtTargetGoalMixin",
+		"GroundPathNavigationMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
