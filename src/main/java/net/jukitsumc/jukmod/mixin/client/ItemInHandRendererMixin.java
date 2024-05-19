@@ -8,11 +8,14 @@ import net.jukitsumc.jukmod.config.option.BooleanOption;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,6 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemInHandRenderer.class)
 public abstract class ItemInHandRendererMixin {
 
+    @Shadow @Final private ItemRenderer itemRenderer;
     @Unique
     private BooleanOption oldSwing;
 
@@ -40,6 +44,42 @@ public abstract class ItemInHandRendererMixin {
     }
     */
 
+    @Inject(method="renderArmWithItem", at=@At("HEAD"))
+    private void cancelItemTransforms(AbstractClientPlayer abstractClientPlayer, float f, float g, InteractionHand interactionHand, float h, ItemStack itemStack, float i, PoseStack poseStack, MultiBufferSource multiBufferSource, int j, CallbackInfo ci) {
+        if (!itemStack.isEmpty()) {
+
+
+        }
+    }
+
+    @Inject(method="renderArmWithItem", at=@At(
+            value="INVOKE",
+            target="Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
+            ordinal = 1))
+    private void applyOldAnimations(AbstractClientPlayer abstractClientPlayer,
+                                    float f, float g,
+                                    InteractionHand interactionHand, float h,
+                                    ItemStack itemStack, float i,
+                                    PoseStack poseStack, MultiBufferSource multiBufferSource, int j, CallbackInfo ci) {
+        if (!this.itemRenderer.getItemModelShaper().getItemModel(itemStack).isCustomRenderer()
+                && !this.itemRenderer.getItemModelShaper().getItemModel(itemStack).isGui3d()) {
+            poseStack.mulPose(Axis.YP.rotationDegrees(45.0F));
+
+            poseStack.scale(0.4F, 0.4F, 0.4F);
+            poseStack.translate(0.58800083f, 0.36999986f, -0.77000016f);
+            poseStack.translate(0.0F, -0.3F, 0.0F);
+            poseStack.scale(1.5F, 1.5F, 1.5F);
+            poseStack.mulPose(Axis.YP.rotationDegrees(50.0F));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(335.0F));
+            poseStack.translate(-0.9375F, -0.0625F, 0.0F);
+            poseStack.scale(-2, 2, -2);
+            poseStack.scale(0.5f, 0.5f, 0.5f);
+
+
+        }
+
+
+    }
 
 
 }

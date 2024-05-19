@@ -5,6 +5,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.MoveControl;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -37,6 +38,7 @@ public class MoveControlMixin {
             this.operation = MoveControl.Operation.MOVE_TO;
         }
     }
+
 
 
 

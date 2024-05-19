@@ -141,7 +141,7 @@ public abstract class MobMixin extends LivingEntity {
                 blockPos = blockPos.above();
                 BlockState blockState2 = this.level().getBlockState(blockPos);
                 if (blockState2.getCollisionShape(this.level(), blockPos, collisionContext).isEmpty()) {
-                    float p = 1.2F;
+                    float p = this.getJumpPower() * this.getJumpPower() * 6.25F;
                     if (this.hasEffect(MobEffects.JUMP)) {
                         p += (float) (this.getEffect(MobEffects.JUMP).getAmplifier() + 1) * 0.75F;
                     }
@@ -175,7 +175,7 @@ public abstract class MobMixin extends LivingEntity {
                             int u = 1;
 
                             while (true) {
-                                if (!((float) u < p)) {
+                                if (u > p) {
                                     break label73;
                                 }
 
@@ -204,7 +204,7 @@ public abstract class MobMixin extends LivingEntity {
 
                     if (t != 1.4E-45F) {
                         float v = (float) ((double) t - this.getY());
-                        if (v > 0.5F && v <= p) {
+                        if (v > this.maxUpStep() && v <= p) {
                             this.autoJumpTime = 1;
                         }
                     }
