@@ -13,6 +13,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -35,34 +36,21 @@ public abstract class ItemInHandRendererMixin {
         oldSwing = Jukmod.getInstance().getConfig().animations().oldSwing();
     }
 
-    /*
-    @Inject(method="applyItemArmTransform", at=@At("TAIL"))
-    public void onApplyItemTransforms(PoseStack poseStack, HumanoidArm humanoidArm, float f, CallbackInfo ci) {
-        int i = humanoidArm == HumanoidArm.RIGHT ? 1 : -1;
-        poseStack.mulPose(Axis.YP.rotationDegrees(i * 5.0F));
-        poseStack.translate(-0.01F, -0.01F, -0.015F);
-    }
-    */
-
-    @Inject(method="renderArmWithItem", at=@At("HEAD"))
-    private void cancelItemTransforms(AbstractClientPlayer abstractClientPlayer, float f, float g, InteractionHand interactionHand, float h, ItemStack itemStack, float i, PoseStack poseStack, MultiBufferSource multiBufferSource, int j, CallbackInfo ci) {
-        if (!itemStack.isEmpty()) {
 
 
-        }
-    }
-
-    @Inject(method="renderArmWithItem", at=@At(
-            value="INVOKE",
-            target="Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
-            ordinal = 1))
-    private void applyOldAnimations(AbstractClientPlayer abstractClientPlayer,
-                                    float f, float g,
-                                    InteractionHand interactionHand, float h,
-                                    ItemStack itemStack, float i,
-                                    PoseStack poseStack, MultiBufferSource multiBufferSource, int j, CallbackInfo ci) {
-        if (!this.itemRenderer.getItemModelShaper().getItemModel(itemStack).isCustomRenderer()
-                && !this.itemRenderer.getItemModelShaper().getItemModel(itemStack).isGui3d()) {
+    @ModifyArg(method="renderArmWithItem",
+            at=@At(value="INVOKE",
+                    target="Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
+                    ordinal = 1),
+            index = 2
+    )
+    public ItemDisplayContext modifyContext(ItemDisplayContext context, @Local PoseStack poseStack, @Local ItemStack itemStack) {
+        if (oldSwing.get()
+                && !this.itemRenderer.getItemModelShaper().getItemModel(itemStack).isCustomRenderer()
+                && !this.itemRenderer.getItemModelShaper().getItemModel(itemStack).isGui3d()
+                && !itemStack.is(Items.FISHING_ROD)
+                && !itemStack.is(Items.TRIDENT)
+                && !itemStack.is(Items.SPYGLASS)) {
             poseStack.mulPose(Axis.YP.rotationDegrees(45.0F));
 
             poseStack.scale(0.4F, 0.4F, 0.4F);
@@ -75,8 +63,10 @@ public abstract class ItemInHandRendererMixin {
             poseStack.scale(-2, 2, -2);
             poseStack.scale(0.5f, 0.5f, 0.5f);
 
-
+            return ItemDisplayContext.NONE;
         }
+
+        return context;
 
 
     }

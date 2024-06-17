@@ -56,7 +56,7 @@ public abstract class LivingEntityMixin extends Entity {
             }
             this.yBodyRot = this.yHeadRot - j;
 
-            if (j * j > 2500.0F)
+            if (Mth.abs(j) > getMaxHeadRotationRelativeToBody())
             {
                 this.yBodyRot += j * 0.2F;
             }
