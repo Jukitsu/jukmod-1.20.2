@@ -4,6 +4,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.RangedBowAttackGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.RangedAttackMob;
+import org.apache.commons.compress.harmony.pack200.NewAttributeBands;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -16,6 +17,9 @@ public class RangedBowAttackGoalMixin<T extends Monster & RangedAttackMob> {
     @Shadow
     @Final
     private T mob;
+
+    @Shadow @Final private float attackRadiusSqr;
+
 
     @Inject(method = "tick", at = @At("TAIL"))
     public void fixSkeletonStrafing(CallbackInfo info) {

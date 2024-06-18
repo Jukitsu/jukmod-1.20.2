@@ -234,25 +234,7 @@ public abstract class MobMixin extends LivingEntity {
     @Inject(method = "tickHeadTurn", at = @At("HEAD"), cancellable = true)
     public void tickHeadTurn(float f, float g, CallbackInfoReturnable ci) {
         if (oldBackwardsOption.get()) {
-            float i = Mth.wrapDegrees(f - this.yBodyRot);
-            this.yBodyRot += i * 0.3F;
-            float j = Mth.wrapDegrees(this.yHeadRot - this.yBodyRot);
-            boolean bl = j < -90.0F || j >= 90.0F;
-            if (Mth.abs(j) > 75.0F) {
-                j = 75.0F * Mth.sign(j);
-            }
-            this.yBodyRot = this.yHeadRot - j;
-
-            if (Mth.abs(j) > getMaxHeadRotationRelativeToBody())
-            {
-                this.yBodyRot += j * 0.2F;
-            }
-
-            if (bl) {
-                g *= -1.0F;
-            }
-
-            ci.setReturnValue(g);
+            ci.setReturnValue(super.tickHeadTurn(f, g));
         }
 
     }
