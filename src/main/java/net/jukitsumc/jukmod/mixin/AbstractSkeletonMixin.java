@@ -71,9 +71,17 @@ public abstract class AbstractSkeletonMixin extends Monster {
         ItemStack itemStack = this.getProjectile(this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, Items.BOW)));
         AbstractArrow abstractArrow = ProjectileUtil.getMobArrow(this, itemStack, f);
 
-        Vec3 v = RangedAttackHandler.getInitialVector(this, livingEntity, abstractArrow, 1.6);
+        if (this.getRandom().nextInt(20 - this.level().getDifficulty().getId() * 4) >= 1) {
+            Vec3 v = RangedAttackHandler.getInitialVector(this, livingEntity, abstractArrow, 1.6);
+            abstractArrow.shoot(v.x, v.y, v.z, 1.6F, (float)(12 - this.level().getDifficulty().getId() * 4));
+        } else {
+            Vec3 v = RangedAttackHandler.getInitialVector(this, livingEntity, abstractArrow, 3.0);
+            abstractArrow.shoot(v.x, v.y, v.z, 3.0F, (float)(Math.max(0.0D, 8 - this.level().getDifficulty().getId() * 4)));
+            if (this.getRandom().nextFloat() >= 0.5F) {
+                abstractArrow.setCritArrow(true);
+            }
+        }
 
-        abstractArrow.shoot(v.x, v.y, v.z, 1.6F, (float)(12 - this.level().getDifficulty().getId() * 4));
 
         this.playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
         this.level().addFreshEntity(abstractArrow);
