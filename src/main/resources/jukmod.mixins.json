@@ -10,10 +10,10 @@
 		"PathfinderMobMixin",
 		"ServerEntityMixin",
 		"EnderDragonMixin",
-		"MoveControlMixin",
 		"MeleeAttackGoalMixin",
 		"LeapAtTargetGoalMixin",
 		"GroundPathNavigationMixin"
+
 	],
 	"injectors": {
 		"defaultRequire": 1

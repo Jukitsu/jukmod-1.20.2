@@ -41,6 +41,8 @@ public abstract class MeleeAttackGoalMixin extends Goal {
     @Shadow
     private double pathedTargetZ;
 
+    @Shadow private long lastCanUseCheck;
+
 
     @Shadow
     protected abstract void checkAndPerformAttack(LivingEntity livingEntity);
@@ -51,17 +53,23 @@ public abstract class MeleeAttackGoalMixin extends Goal {
      */
     @Overwrite
     public boolean canUse() {
-        LivingEntity livingEntity = this.mob.getTarget();
-        if (livingEntity == null) {
-            return false;
-        } else if (!livingEntity.isAlive()) {
+        long l = this.mob.level().getGameTime();
+        if (l - this.lastCanUseCheck < this.getAttackInterval()) {
             return false;
         } else {
-            this.path = this.mob.getNavigation().createPath(livingEntity, 0);
-            if (this.path != null) {
-                return true;
+            this.lastCanUseCheck = l;
+            LivingEntity livingEntity = this.mob.getTarget();
+            if (livingEntity == null) {
+                return false;
+            } else if (!livingEntity.isAlive()) {
+                return false;
             } else {
-                return this.mob.isWithinMeleeAttackRange(livingEntity);
+                this.path = this.mob.getNavigation().createPath(livingEntity, 0);
+                if (this.path != null) {
+                    return true;
+                } else {
+                    return this.mob.isWithinMeleeAttackRange(livingEntity);
+                }
             }
         }
     }
@@ -115,14 +123,6 @@ public abstract class MeleeAttackGoalMixin extends Goal {
         }
     }
 
-    private boolean calculatePath() {
-        if (this.mob.distanceTo(this.mob.getTarget()) < 5) {
-            this.path = this.mob.getNavigation().createPath(this.mob.getTarget(), 0);
-            this.mob.getNavigation().moveTo(this.path, this.speedModifier);
-            return false;
-        }
-        return !this.mob.getNavigation().isDone();
-    }
 
     /**
      * @author Jukitsu
@@ -135,8 +135,6 @@ public abstract class MeleeAttackGoalMixin extends Goal {
             return false;
         } else if (!livingEntity.isAlive()) {
             return false;
-        } else if (!this.followingTargetEvenIfNotSeen) {
-            return calculatePath();
         } else if (!this.mob.isWithinRestriction(livingEntity.blockPosition())) {
             return false;
         } else {
