@@ -8,6 +8,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -16,67 +17,38 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(MeleeAttackGoal.class)
 public abstract class MeleeAttackGoalMixin extends Goal {
 
-    @Shadow
-    @Final
-    protected PathfinderMob mob;
+    @Shadow @Final protected PathfinderMob mob;
+    @Shadow private int ticksUntilNextAttack;
+    @Shadow private Path path;
+    @Shadow @Final private double speedModifier;
+    @Shadow private int ticksUntilNextPathRecalculation;
+    @Shadow @Final private boolean followingTargetEvenIfNotSeen;
+    @Shadow private double pathedTargetX;
+    @Shadow private double pathedTargetY;
+    @Shadow private double pathedTargetZ;
 
-    @Shadow
-    private int ticksUntilNextAttack;
-
-    @Shadow
-    private Path path;
-    @Shadow
-    @Final
-    private double speedModifier;
-    @Shadow
-    private int ticksUntilNextPathRecalculation;
-
-    @Shadow
-    @Final
-    private boolean followingTargetEvenIfNotSeen;
-    @Shadow
-    private double pathedTargetX;
-    @Shadow
-    private double pathedTargetY;
-    @Shadow
-    private double pathedTargetZ;
-
-    @Shadow private long lastCanUseCheck;
-
-
-    @Shadow
-    protected abstract void checkAndPerformAttack(LivingEntity livingEntity);
+    @Shadow protected abstract void checkAndPerformAttack(LivingEntity livingEntity);
 
     /**
+     * Fix ADHD Mobs
      * @author Jukitsu
-     * @reason Fix Melee Attack
+     * @reason Refactor
      */
     @Overwrite
     public boolean canUse() {
-        long l = this.mob.level().getGameTime();
-        if (l - this.lastCanUseCheck < this.getAttackInterval()) {
+        LivingEntity target = this.mob.getTarget();
+        if (target == null || !target.isAlive()) {
             return false;
-        } else {
-            this.lastCanUseCheck = l;
-            LivingEntity livingEntity = this.mob.getTarget();
-            if (livingEntity == null) {
-                return false;
-            } else if (!livingEntity.isAlive()) {
-                return false;
-            } else {
-                this.path = this.mob.getNavigation().createPath(livingEntity, 0);
-                if (this.path != null) {
-                    return true;
-                } else {
-                    return this.mob.isWithinMeleeAttackRange(livingEntity);
-                }
-            }
         }
+
+        this.path = this.mob.getNavigation().createPath(target, 0);
+        return this.path != null || this.mob.isWithinMeleeAttackRange(target);
     }
 
     /**
+     * Fix ADHD Mobs
      * @author Jukitsu
-     * @reason Fix Attack Speed
+     * @reason Refactor
      */
     @Overwrite
     public void start() {
@@ -86,65 +58,72 @@ public abstract class MeleeAttackGoalMixin extends Goal {
     }
 
     /**
+     * Fix ADHD Mobs
      * @author Jukitsu
-     * @reason Complete Rewrite
+     * @reason Refactor
      */
     @Overwrite
     public void tick() {
-        LivingEntity livingEntity = this.mob.getTarget();
-        if (livingEntity != null) {
-            this.mob.getLookControl().setLookAt(livingEntity, 30.0F, 30.0F);
-            this.ticksUntilNextPathRecalculation = Math.max(this.ticksUntilNextPathRecalculation - 1, 0);
-            if ((this.followingTargetEvenIfNotSeen || this.mob.getSensing().hasLineOfSight(livingEntity))
-                    && this.ticksUntilNextPathRecalculation <= 0
-                    && (this.pathedTargetX == 0.0D && this.pathedTargetY == 0.0D
-                    && this.pathedTargetZ == 0.0D || livingEntity.distanceToSqr(this.pathedTargetX, this.pathedTargetY, this.pathedTargetZ) > 0.01D
-                    || this.mob.getRandom().nextFloat() < 0.05F)) {
-                this.pathedTargetX = livingEntity.getX();
-                this.pathedTargetY = livingEntity.getY();
-                this.pathedTargetZ = livingEntity.getZ();
-                this.ticksUntilNextPathRecalculation = 4 + this.mob.getRandom().nextInt(7);
-                double d = this.mob.distanceToSqr(livingEntity);
-                if (d > 1024.0D) {
-                    this.ticksUntilNextPathRecalculation += 10;
-                } else if (d > 256.0D) {
-                    this.ticksUntilNextPathRecalculation += 5;
-                }
-
-                if (!this.mob.getNavigation().moveTo(livingEntity, this.speedModifier)) {
-                    this.ticksUntilNextPathRecalculation += 15;
-                }
-
-                this.ticksUntilNextPathRecalculation = this.adjustedTickDelay(this.ticksUntilNextPathRecalculation);
-            }
-
-            this.ticksUntilNextAttack = Math.max(this.ticksUntilNextAttack - 1, 0);
-            this.checkAndPerformAttack(livingEntity);
+        LivingEntity target = this.mob.getTarget();
+        if (target == null) {
+            return;
         }
+
+        this.mob.getLookControl().setLookAt(target, 30.0F, 30.0F);
+        this.ticksUntilNextPathRecalculation = Math.max(this.ticksUntilNextPathRecalculation - 1, 0);
+
+        if (shouldRecalculatePath(target)) {
+            recalculatePath(target);
+        }
+
+        this.ticksUntilNextAttack--;
+        this.checkAndPerformAttack(target);
     }
 
+    private boolean shouldRecalculatePath(LivingEntity target) {
+        return (this.followingTargetEvenIfNotSeen || this.mob.getSensing().hasLineOfSight(target))
+                && this.ticksUntilNextPathRecalculation <= 0;
+    }
+
+    private void recalculatePath(LivingEntity target) {
+        this.pathedTargetX = target.getX();
+        this.pathedTargetY = target.getY();
+        this.pathedTargetZ = target.getZ();
+        this.ticksUntilNextPathRecalculation = 4 + this.mob.getRandom().nextInt(7);
+
+        double distance = this.mob.distanceToSqr(target);
+        if (distance > 1024.0D) {
+            this.ticksUntilNextPathRecalculation += 10;
+        } else if (distance > 256.0D) {
+            this.ticksUntilNextPathRecalculation += 5;
+        }
+
+        if (!this.mob.getNavigation().moveTo(target, this.speedModifier)) {
+            this.ticksUntilNextPathRecalculation += 15;
+        }
+
+        this.ticksUntilNextPathRecalculation = this.adjustedTickDelay(this.ticksUntilNextPathRecalculation);
+    }
 
     /**
+     * Fix ADHD Mobs
      * @author Jukitsu
-     * @reason Fix ADHD Mobs
+     * @reason Refactor
      */
     @Overwrite
     public boolean canContinueToUse() {
-        LivingEntity livingEntity = this.mob.getTarget();
-        if (livingEntity == null) {
+        LivingEntity target = this.mob.getTarget();
+        if (target == null || !target.isAlive() || !this.mob.isWithinRestriction(target.blockPosition())) {
             return false;
-        } else if (!livingEntity.isAlive()) {
-            return false;
-        } else if (!this.mob.isWithinRestriction(livingEntity.blockPosition())) {
-            return false;
-        } else {
-            return !(livingEntity instanceof Player) || !livingEntity.isSpectator() && !((Player) livingEntity).isCreative();
         }
+
+        return !(target instanceof Player) || !target.isSpectator() && !((Player) target).isCreative();
     }
 
     /**
+     * Fix ADHD Mobs
      * @author Jukitsu
-     * @reason Boost Entities
+     * @reason Refactor
      */
     @Overwrite
     public void resetAttackCooldown() {
@@ -152,11 +131,15 @@ public abstract class MeleeAttackGoalMixin extends Goal {
     }
 
     /**
+     * Fix ADHD Mobs
      * @author Jukitsu
-     * @reason Introduce Attack Speed Based Interval
+     * @reason Refactor
      */
     @Overwrite
     public int getAttackInterval() {
-        return this.adjustedTickDelay(Math.max(10, Mth.floor(1.0D / this.mob.getAttributeValue(Attributes.ATTACK_SPEED) * 20.0D)));
+        int baseInterval = 25 - this.mob.level().getDifficulty().getId() * 5;
+        double attackSpeed = this.mob.getAttributeValue(Attributes.ATTACK_SPEED);
+        int interval = Math.max(baseInterval, Mth.floor(1.0D / attackSpeed * 20.0D));
+        return this.adjustedTickDelay(interval);
     }
 }

@@ -31,7 +31,7 @@ public abstract class OverlayTextureMixin {
             for (int j = 0; j < 16; ++j) {
                 if (i < 8) {
                     assert nativeImage != null;
-                    nativeImage.setPixelRGBA(j, i, getColorInt(255, 0, 0, 104));
+                    nativeImage.setPixelRGBA(j, i, getColorInt(255, 0, 0, 102));
                 }
             }
         }
