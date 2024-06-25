@@ -37,7 +37,7 @@ public abstract class EntityMixin {
             return;
 
         SoundType soundType = blockState.getSoundType();
-        this.playSound(soundType.getStepSound(), soundType.getVolume() * 0.15F * (isEntityDimed ? 0.5F : 0.0F), soundType.getPitch());
+        this.playSound(soundType.getStepSound(), soundType.getVolume() * 0.15F * (isEntityDimed ? 0.5F : 1.0F), soundType.getPitch());
 
     }
 
