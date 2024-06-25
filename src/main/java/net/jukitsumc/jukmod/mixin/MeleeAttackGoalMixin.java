@@ -98,9 +98,8 @@ public abstract class MeleeAttackGoalMixin extends Goal {
             this.ticksUntilNextPathRecalculation += 5;
         }
 
-        if (!this.mob.getNavigation().moveTo(target, this.speedModifier)) {
+        if (!this.mob.getNavigation().moveTo(target, this.speedModifier))
             this.ticksUntilNextPathRecalculation += 15;
-        }
 
         this.ticksUntilNextPathRecalculation = this.adjustedTickDelay(this.ticksUntilNextPathRecalculation);
     }
@@ -113,11 +112,12 @@ public abstract class MeleeAttackGoalMixin extends Goal {
     @Overwrite
     public boolean canContinueToUse() {
         LivingEntity target = this.mob.getTarget();
-        if (target == null || !target.isAlive() || !this.mob.isWithinRestriction(target.blockPosition())) {
-            return false;
-        }
 
-        return !(target instanceof Player) || !target.isSpectator() && !((Player) target).isCreative();
+        return target != null
+                && target.isAlive()
+                && this.mob.isWithinRestriction(target.blockPosition())
+                && (followingTargetEvenIfNotSeen || this.mob.getNavigation().isInProgress())
+                && (!(target instanceof Player) || (!target.isSpectator() && !((Player) target).isCreative()));
     }
 
     /**

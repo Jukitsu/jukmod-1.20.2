@@ -25,8 +25,8 @@ public class EnderDragonMixin {
 
     @Redirect(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(DDD)Lnet/minecraft/world/phys/Vec3;"))
     public Vec3 properlyDive(Vec3 instance, double d, double e, double f) {
-        int i = dragonMovement.get() ? 1 : 0;
-        return instance.add(d, e * 10 * i, f);
+        int i = dragonMovement.get() ? 10 : 1;
+        return instance.add(d, e * i, f);
     }
 
 }
