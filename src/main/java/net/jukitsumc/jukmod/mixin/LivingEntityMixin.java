@@ -46,27 +46,31 @@ public abstract class LivingEntityMixin extends Entity {
 
     @Inject(method = "tickHeadTurn", at = @At("TAIL"), cancellable = true)
     public void tickHeadTurn(float f, float g, CallbackInfoReturnable ci) {
+        float angle = Mth.wrapDegrees(f - this.yBodyRot);
+        this.yBodyRot += angle * 0.3F;
+        float relativeAngle = Mth.wrapDegrees(this.yHeadRot - this.yBodyRot);
+        boolean bl = relativeAngle < -90.0F || relativeAngle >= 90.0F;
         if (oldPlayerBackwardsOption.get()) {
-            float i = Mth.wrapDegrees(f - this.yBodyRot);
-            this.yBodyRot += i * 0.3F;
-            float j = Mth.wrapDegrees(this.yHeadRot - this.yBodyRot);
-            boolean bl = j < -90.0F || j >= 90.0F;
-            if (Mth.abs(j) > 75.0F) {
-                j = 75.0F * Mth.sign(j);
+            if (Mth.abs(relativeAngle) > 75.0F) {
+                relativeAngle = 75.0F * Mth.sign(relativeAngle);
             }
-            this.yBodyRot = this.yHeadRot - j;
+            this.yBodyRot = this.yHeadRot - relativeAngle;
 
-            if (Mth.abs(j) > getMaxHeadRotationRelativeToBody())
-            {
-                this.yBodyRot += j * 0.2F;
+            if (Mth.abs(relativeAngle) > getMaxHeadRotationRelativeToBody()) {
+                this.yBodyRot += relativeAngle * 0.2F;
             }
 
-            if (bl) {
-                g *= -1.0F;
+        } else {
+            float maxAngle = this.getMaxHeadRotationRelativeToBody();
+            if (Math.abs(relativeAngle) > maxAngle) {
+                this.yBodyRot += relativeAngle - (float)Mth.sign(relativeAngle) * maxAngle;
             }
 
-            ci.setReturnValue(g);
         }
+        if (bl) {
+            g *= -1.0F;
+        }
+        ci.setReturnValue(g);
 
     }
 
