@@ -74,6 +74,13 @@ public abstract class LivingEntityMixin extends Entity {
 
     }
 
+    @ModifyExpressionValue(method="tick", at=@At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F",
+        ordinal = 0))
+    public float returnHeadYaw(float original) {
+        return this.yHeadRot;
+    }
+
 
     @ModifyExpressionValue(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;isControlledByLocalInstance()Z"))
     private boolean addOldClientMovement(boolean b) {

@@ -234,7 +234,9 @@ public abstract class MobMixin extends LivingEntity {
     @Inject(method = "tickHeadTurn", at = @At("HEAD"), cancellable = true)
     public void tickHeadTurn(float f, float g, CallbackInfoReturnable ci) {
         if (oldBackwardsOption.get()) {
-            ci.setReturnValue(super.tickHeadTurn(f, g));
+            g = super.tickHeadTurn(f, g);
+            bodyRotationControl.clientTick();
+            ci.setReturnValue(g);
         }
 
     }

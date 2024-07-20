@@ -14,7 +14,9 @@
 		"EnderDragonMixin",
 		"MeleeAttackGoalMixin",
 		"LeapAtTargetGoalMixin",
-		"GroundPathNavigationMixin"
+		"GroundPathNavigationMixin",
+		"LookControlMixin",
+		"BodyRotationControlMixin"
 
 	],
 	"injectors": {
