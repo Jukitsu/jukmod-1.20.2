@@ -24,6 +24,9 @@ public abstract class LivingEntityMixin extends Entity {
     private BooleanOption oldPlayerBackwardsOption;
 
     @Unique
+    private BooleanOption deathWalk;
+
+    @Unique
     private BooleanOption oldClientMovement;
 
     protected LivingEntityMixin(EntityType<? extends LivingEntity> entityType, Level level) {
@@ -34,6 +37,7 @@ public abstract class LivingEntityMixin extends Entity {
     private void initialize(CallbackInfo ci) {
         oldPlayerBackwardsOption = Jukmod.getInstance().getConfig().animations().oldPlayerBackwards();
         oldClientMovement = Jukmod.getInstance().getConfig().entities().oldClientMovement();
+        deathWalk = Jukmod.getInstance().getConfig().animations().deathWalk();
     }
 
     @Shadow
@@ -92,6 +96,10 @@ public abstract class LivingEntityMixin extends Entity {
         return this.oldPlayerBackwardsOption.get() ? 0.0F : f;
     }
 
+    @ModifyExpressionValue(method = "calculateEntityAnimation", at=@At(value="INVOKE", target="Lnet/minecraft/world/entity/LivingEntity;isAlive()Z"))
+    private boolean deathWalkAnimation(boolean original) {
+        return deathWalk.get() || original;
+    }
 
     /**
      * @author Jukitsu

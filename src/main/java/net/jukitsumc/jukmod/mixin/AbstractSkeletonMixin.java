@@ -18,6 +18,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -66,10 +67,13 @@ public abstract class AbstractSkeletonMixin extends Monster {
         ci.cancel();
     }
 
+    @Shadow protected abstract AbstractArrow getArrow(ItemStack itemStack, float f, @Nullable ItemStack itemStack2);
+
     @Inject(method="performRangedAttack", at=@At("HEAD"), cancellable = true)
     public void performRangedAttack(LivingEntity livingEntity, float f, CallbackInfo ci) {
-        ItemStack itemStack = this.getProjectile(this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, Items.BOW)));
-        AbstractArrow abstractArrow = ProjectileUtil.getMobArrow(this, itemStack, f);
+        ItemStack itemStack = this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, Items.BOW));
+        ItemStack itemStack2 = this.getProjectile(itemStack);
+        AbstractArrow abstractArrow = this.getArrow(itemStack2, f, itemStack);
 
         if (this.getRandom().nextInt(20 - this.level().getDifficulty().getId() * 4) >= 1) {
             Vec3 v = RangedAttackHandler.getInitialVector(this, livingEntity, abstractArrow, 1.6);

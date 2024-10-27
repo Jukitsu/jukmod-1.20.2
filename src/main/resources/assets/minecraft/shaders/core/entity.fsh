@@ -1,6 +1,6 @@
 #version 150
 
-#moj_import <fog.glsl>
+#moj_import <minecraft:fog.glsl>
 
 uniform sampler2D Sampler0;
 
@@ -11,18 +11,25 @@ uniform vec4 FogColor;
 
 in float vertexDistance;
 in vec4 vertexColor;
+in vec4 lightMapColor;
 in vec4 overlayColor;
 in vec2 texCoord0;
-in vec4 normal;
 
 out vec4 fragColor;
 
 void main() {
     vec4 color = texture(Sampler0, texCoord0);
-    if (color.a < 0.1) {
+#ifdef ALPHA_CUTOUT
+    if (color.a < ALPHA_CUTOUT) {
         discard;
     }
-    color.rgb = mix(overlayColor.rgb, color.rgb, 1.0f);
+#endif
+#ifndef NO_OVERLAY
+    color.rgb = mix(overlayColor.rgb, color.rgb, overlayColor.a);
+#endif
     color *= vertexColor * ColorModulator;
+#ifndef EMISSIVE
+    color *= lightMapColor;
+#endif
     fragColor = linear_fog(color, vertexDistance, FogStart, FogEnd, FogColor);
 }

@@ -1,5 +1,6 @@
 package net.jukitsumc.jukmod.mixin;
 
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -31,7 +32,7 @@ public abstract class LeapAtTargetGoalMixin extends Goal {
     public void tick() {
         if (this.mob.isWithinMeleeAttackRange(target) && this.mob.getSensing().hasLineOfSight(target)) {
             this.mob.swing(InteractionHand.MAIN_HAND);
-            this.mob.doHurtTarget(target);
+            this.mob.doHurtTarget((ServerLevel)target.level(), target);
             super.stop();
         }
     }

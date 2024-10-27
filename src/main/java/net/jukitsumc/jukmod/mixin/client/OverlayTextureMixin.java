@@ -19,7 +19,7 @@ public abstract class OverlayTextureMixin {
 
     private static int getColorInt(int red, int green, int blue, int alpha) {
         alpha = 255 - alpha;
-        return (alpha << 24) + (blue << 16) + (green << 8) + red;
+        return (alpha << 24) + (red << 16) + (green << 8) + blue;
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
@@ -31,7 +31,7 @@ public abstract class OverlayTextureMixin {
             for (int j = 0; j < 16; ++j) {
                 if (i < 8) {
                     assert nativeImage != null;
-                    nativeImage.setPixelRGBA(j, i, getColorInt(255, 0, 0, 102));
+                    nativeImage.setPixel(j, i, getColorInt(255, 0, 0, 102));
                 }
             }
         }

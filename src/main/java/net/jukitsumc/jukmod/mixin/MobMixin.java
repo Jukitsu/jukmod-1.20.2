@@ -3,7 +3,6 @@ package net.jukitsumc.jukmod.mixin;
 import com.mojang.logging.LogUtils;
 import net.jukitsumc.jukmod.Jukmod;
 import net.jukitsumc.jukmod.config.option.BooleanOption;
-import net.jukitsumc.jukmod.entity.Human;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -14,12 +13,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.BodyRotationControl;
 import net.minecraft.world.entity.ai.control.JumpControl;
 import net.minecraft.world.entity.ai.control.MoveControl;
-import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
-import net.minecraft.world.entity.ai.goal.PanicGoal;
-import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -34,7 +29,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Iterator;
-import java.util.Optional;
 import java.util.stream.StreamSupport;
 
 @Mixin(Mob.class)
@@ -87,12 +81,7 @@ public abstract class MobMixin extends LivingEntity {
     @Shadow
     public abstract boolean isEffectiveAi();
 
-    @Inject(method = "<init>", at = @At("TAIL"))
-    public void targetHumanIfHostile(EntityType<? extends Mob> entityType, Level level, CallbackInfo info) {
-        if (level != null && !level.isClientSide && !entityType.getCategory().isFriendly() && !(this instanceof NeutralMob)) {
-            this.targetSelector.addGoal(2, new NearestAttackableTargetGoal((Mob) (Object) this, Human.class, true));
-        }
-    }
+
     private boolean isMoving() {
         return this.xxa != 0.0F || this.zza != 0.0F;
     }

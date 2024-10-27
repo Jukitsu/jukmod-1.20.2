@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -44,10 +45,11 @@ public abstract class ItemInHandRendererMixin {
                     ordinal = 1),
             index = 2
     )
-    public ItemDisplayContext modifyContext(ItemDisplayContext context, @Local PoseStack poseStack, @Local ItemStack itemStack) {
+    public ItemDisplayContext modifyContext(ItemDisplayContext context, @Local AbstractClientPlayer livingEntity, @Local PoseStack poseStack, @Local ItemStack itemStack, @Local int i) {
         if (oldSwing.get()
-                && !this.itemRenderer.getItemModelShaper().getItemModel(itemStack).isCustomRenderer()
-                && !this.itemRenderer.getItemModelShaper().getItemModel(itemStack).isGui3d()
+                && !this.itemRenderer.getModel(itemStack, livingEntity.level(), livingEntity, i).isCustomRenderer()
+                && !this.itemRenderer.getModel(itemStack, livingEntity.level(), livingEntity, i).isGui3d()
+                && !this.itemRenderer.getModel(itemStack, livingEntity.level(), livingEntity, i).useAmbientOcclusion()
                 && !itemStack.is(Items.FISHING_ROD)
                 && !itemStack.is(Items.TRIDENT)
                 && !itemStack.is(Items.SPYGLASS)) {

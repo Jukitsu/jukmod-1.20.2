@@ -2,9 +2,12 @@ package net.jukitsumc.jukmod.mixin.client;
 
 import net.jukitsumc.jukmod.Jukmod;
 import net.jukitsumc.jukmod.config.option.BooleanOption;
-import net.minecraft.client.model.AgeableListModel;
+import net.minecraft.client.model.ArmedModel;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.HeadedModel;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
@@ -17,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(HumanoidModel.class)
-public abstract class HumanoidModelMixin<T extends LivingEntity> extends AgeableListModel<T> {
+public abstract class HumanoidModelMixin<T extends HumanoidRenderState> extends EntityModel<T> implements ArmedModel, HeadedModel {
 
     @Shadow
     @Final
@@ -37,8 +40,14 @@ public abstract class HumanoidModelMixin<T extends LivingEntity> extends Ageable
     @Unique
     private BooleanOption fixLeftHand;
 
-    @Shadow
-    protected abstract HumanoidArm getAttackArm(T livingEntity);
+    protected HumanoidModelMixin(ModelPart modelPart) {
+        super(modelPart);
+    }
+
+
+    protected HumanoidArm getAttackArm(T humanoidRenderState) {
+        return humanoidRenderState.mainArm;
+    }
 
     @Shadow
     protected abstract ModelPart getArm(HumanoidArm humanoidArm);
@@ -55,11 +64,11 @@ public abstract class HumanoidModelMixin<T extends LivingEntity> extends Ageable
 
 
     @Inject(method = "setupAttackAnimation", at = @At("HEAD"), cancellable = true)
-    public void onSetupAttackAnimation(T livingEntity, float f, CallbackInfo ci) {
-        if (!(this.attackTime <= 0.0F) && fixLeftHand.get()) {
-            HumanoidArm humanoidArm = this.getAttackArm(livingEntity);
+    public void onSetupAttackAnimation(T humanoidRenderState, float f, CallbackInfo ci) {
+        if (!(humanoidRenderState.attackTime <= 0.0F) && fixLeftHand.get()) {
+            HumanoidArm humanoidArm = this.getAttackArm(humanoidRenderState);
             ModelPart modelPart = this.getArm(humanoidArm);
-            float g = this.attackTime;
+            float g = humanoidRenderState.attackTime;
             this.body.yRot = Mth.sin(Mth.sqrt(g) * 6.2831855F) * 0.2F;
             ModelPart var10000;
             if (humanoidArm == HumanoidArm.LEFT) {
@@ -79,18 +88,18 @@ public abstract class HumanoidModelMixin<T extends LivingEntity> extends Ageable
                 this.leftArm.xRot += this.body.yRot;
             }
 
-            g = 1.0F - this.attackTime;
+            g = 1.0F - humanoidRenderState.attackTime;
             g *= g;
             g *= g;
             g = 1.0F - g;
             float h = Mth.sin(g * 3.1415927F);
-            float i = Mth.sin(this.attackTime * 3.1415927F) * -(this.head.xRot - 0.7F) * 0.75F;
+            float i = Mth.sin(humanoidRenderState.attackTime * 3.1415927F) * -(this.head.xRot - 0.7F) * 0.75F;
             modelPart.xRot -= h * 1.2F + i;
             modelPart.yRot += this.body.yRot * 2.0F;
             if (humanoidArm == HumanoidArm.LEFT) {
-                modelPart.zRot += Mth.sin(this.attackTime * (float) Math.PI) * 0.4F;
+                modelPart.zRot += Mth.sin(humanoidRenderState.attackTime * (float) Math.PI) * 0.4F;
             } else {
-                modelPart.zRot -= Mth.sin(this.attackTime * (float) Math.PI) * 0.4F;
+                modelPart.zRot -= Mth.sin(humanoidRenderState.attackTime * (float) Math.PI) * 0.4F;
             }
             ci.cancel();
         }
